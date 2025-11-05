@@ -641,7 +641,7 @@ async def abrazar(interaction: discord.Interaction, usuario: discord.Member):
 		"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS6KUK3rUl_EftABW5DSPZyG76hPQmB-2z1hQ&usqp=CAU",
 		"https://i.pinimg.com/originals/85/dc/ef/85dcef131af84b515106955e142df54e.gif",
 		"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTN4yetNRO1ky7oC6afzeO2nZp1gIj98pxSUkeSSn7m-AwaqeFzqvBFUTO2&s=10",
-		",
+		"./images/17623616496654339245968767173004.gif",
 		"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5b1fr9fbn_bjqCgJDNKZZI-0ptFAZ96zP2xCWK-vHxGmDmR9v5b98z_c&s=10",
 		"https://i.pinimg.com/1200x/4f/3b/3b/4f3b3b7976e63222d8bda521eb5c5ab2.jpg",
 		"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS33rofShkbjg4AXQrq8xgrbjP77Jc3dUKmI_X_CTsChTR6YESWeuiCKB8T&s=10",
