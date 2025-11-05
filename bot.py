@@ -1947,7 +1947,682 @@ async def economia(ctx):
     await ctx.send(embed=embed)
 
 
+#_________gacha 2????????????
+import json
+import random
+import os
+import asyncio
+from datetime import datetime, timedelta
+import uuid
 
+# ============ SISTEMA DE GACHA ANIME ============
+GACHA_CONFIG = {
+    'amuleto_cost': 1000,  # Costo en monedas normales
+    'coins_per_week': 50,  # Monedas por personaje cada semana
+    'claim_cooldown_days': 7,
+    'starting_amuleto': 1,
+    'max_inventory_size': 200
+}
+
+# Sistema de rarezas para personajes de anime
+ANIME_RARITY_SYSTEM = {
+    "comun": {"prob": 55, "color": 0x808080, "coin_multiplier": 1.0, "emoji": "⚪"},
+    "raro": {"prob": 30, "color": 0x0070DD, "coin_multiplier": 1.5, "emoji": "🔵"},
+    "epico": {"prob": 10, "color": 0xA335EE, "coin_multiplier": 2.0, "emoji": "🟣"},
+    "legendario": {"prob": 4, "color": 0xFF8000, "coin_multiplier": 3.0, "emoji": "🟠"},
+    "mitico": {"prob": 1, "color": 0xE6CC80, "coin_multiplier": 5.0, "emoji": "🟡"}
+}
+
+# Base de datos de personajes de anime
+ANIME_CHARACTERS = [
+    # COMUNES
+    {"id": "naruto_001", "nombre": "Naruto Uzumaki", "serie": "Naruto", "rareza": "comun", "image_url": "https://example.com/naruto.jpg"},
+    {"id": "luffy_001", "nombre": "Monkey D. Luffy", "serie": "One Piece", "rareza": "comun", "image_url": "https://example.com/luffy.jpg"},
+    {"id": "goku_001", "nombre": "Son Goku", "serie": "Dragon Ball", "rareza": "comun", "image_url": "https://example.com/goku.jpg"},
+    {"id": "sakura_001", "nombre": "Sakura Haruno", "serie": "Naruto", "rareza": "comun", "image_url": "https://example.com/sakura.jpg"},
+    {"id": "usopp_001", "nombre": "Usopp", "serie": "One Piece", "rareza": "comun", "image_url": "https://example.com/usopp.jpg"},
+    
+    # RAROS
+    {"id": "sasuke_001", "nombre": "Sasuke Uchiha", "serie": "Naruto", "rareza": "raro", "image_url": "https://example.com/sasuke.jpg"},
+    {"id": "zoro_001", "nombre": "Roronoa Zoro", "serie": "One Piece", "rareza": "raro", "image_url": "https://example.com/zoro.jpg"},
+    {"id": "vegeta_001", "nombre": "Vegeta", "serie": "Dragon Ball", "rareza": "raro", "image_url": "https://example.com/vegeta.jpg"},
+    {"id": "levi_001", "nombre": "Levi Ackerman", "serie": "Attack on Titan", "rareza": "raro", "image_url": "https://example.com/levi.jpg"},
+    
+    # EPICOS
+    {"id": "itachi_001", "nombre": "Itachi Uchiha", "serie": "Naruto", "rareza": "epico", "image_url": "https://example.com/itachi.jpg"},
+    {"id": "ace_001", "nombre": "Portgas D. Ace", "serie": "One Piece", "rareza": "epico", "image_url": "https://example.com/ace.jpg"},
+    {"id": "gojo_001", "nombre": "Satoru Gojo", "serie": "Jujutsu Kaisen", "rareza": "epico", "image_url": "https://example.com/gojo.jpg"},
+    {"id": "rem_001", "nombre": "Rem", "serie": "Re:Zero", "rareza": "epico", "image_url": "https://example.com/rem.jpg"},
+    
+    # LEGENDARIOS
+    {"id": "madara_001", "nombre": "Madara Uchiha", "serie": "Naruto", "rareza": "legendario", "image_url": "https://example.com/madara.jpg"},
+    {"id": "shanks_001", "nombre": "Shanks", "serie": "One Piece", "rareza": "legendario", "image_url": "https://example.com/shanks.jpg"},
+    {"id": "guts_001", "nombre": "Guts", "serie": "Berserk", "rareza": "legendario", "image_url": "https://example.com/guts.jpg"},
+    
+    # MITICOS
+    {"id": "saitama_001", "nombre": "Saitama", "serie": "One Punch Man", "rareza": "mitico", "image_url": "https://example.com/saitama.jpg"},
+    {"id": "light_001", "nombre": "Light Yagami", "serie": "Death Note", "rareza": "mitico", "image_url": "https://example.com/light.jpg"},
+    {"id": "l_001", "nombre": "L Lawliet", "serie": "Death Note", "rareza": "mitico", "image_url": "https://example.com/l.jpg"}
+]
+
+class AnimeGachaSystem:
+    """Sistema de gacha para personajes de anime con amuletos y reclamación"""
+    
+    def __init__(self):
+        self.data_file = 'anime_gacha_data.json'
+        self._cache = {}
+        self._lock = asyncio.Lock()
+        self._load_data()
+    
+    def _load_data(self):
+        """Cargar datos desde JSON"""
+        try:
+            if os.path.exists(self.data_file):
+                with open(self.data_file, 'r', encoding='utf-8') as f:
+                    self._cache = json.load(f)
+            else:
+                self._cache = {
+                    "users": {},
+                    "global_stats": {
+                        "total_invocaciones": 0,
+                        "personajes_obtenidos": {},
+                        "ultimo_mitico": None
+                    }
+                }
+                self._save_data()
+        except Exception as e:
+            print(f"❌ Error cargando datos gacha: {e}")
+            self._cache = {"users": {}, "global_stats": {"total_invocaciones": 0, "personajes_obtenidos": {}, "ultimo_mitico": None}}
+    
+    def _save_data(self):
+        """Guardar datos a JSON"""
+        try:
+            with open(self.data_file, 'w', encoding='utf-8') as f:
+                json.dump(self._cache, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"❌ Error guardando datos gacha: {e}")
+    
+    async def _atomic_operation(self, operation):
+        """Ejecutar operación atómicamente con lock"""
+        async with self._lock:
+            try:
+                result = await operation()
+                asyncio.create_task(self._async_save())
+                return result
+            except Exception as e:
+                print(f"❌ Error en operación atómica gacha: {e}")
+                raise
+    
+    async def _async_save(self):
+        """Guardar de forma asíncrona"""
+        await asyncio.get_event_loop().run_in_executor(None, self._save_data)
+    
+    def get_user_data(self, user_id: str):
+        """Obtener datos de usuario de forma segura"""
+        user_id_str = str(user_id)
+        if user_id_str not in self._cache["users"]:
+            self._cache["users"][user_id_str] = {
+                "amuleto": GACHA_CONFIG['starting_amuleto'],
+                "monedas_gacha": 0,
+                "personajes": [],
+                "ultimo_claim": None,
+                "total_invocaciones": 0,
+                "personajes_unicos": set(),
+                "historial_invocaciones": []
+            }
+        return self._cache["users"][user_id_str]
+    
+    def get_rarity(self):
+        """Obtener rareza basada en probabilidades"""
+        rand = random.random() * 100
+        cumulative = 0
+        
+        for rarity, data in ANIME_RARITY_SYSTEM.items():
+            cumulative += data["prob"]
+            if rand <= cumulative:
+                return rarity
+        
+        return "comun"
+    
+    def get_random_character(self, rarity: str):
+        """Obtener personaje aleatorio de una rareza específica"""
+        available_chars = [char for char in ANIME_CHARACTERS if char["rareza"] == rarity]
+        
+        if available_chars:
+            char = random.choice(available_chars).copy()
+            char["unique_id"] = str(uuid.uuid4())[:8]
+            char["obtenido_en"] = datetime.now().isoformat()
+            char["ultimo_claim"] = None  # Fecha del último reclamo de monedas
+            return char
+        else:
+            # Fallback: crear personaje genérico
+            return {
+                "id": f"fallback_{rarity}",
+                "unique_id": str(uuid.uuid4())[:8],
+                "nombre": f"Personaje {rarity.capitalize()}",
+                "serie": "Sistema",
+                "rareza": rarity,
+                "image_url": None,
+                "obtenido_en": datetime.now().isoformat(),
+                "ultimo_claim": None
+            }
+    
+    async def invocar_personaje(self, user_id: str, use_amuleto: bool = True):
+        """Realizar una invocación de personaje"""
+        async def operation():
+            user_data = self.get_user_data(user_id)
+            
+            if use_amuleto:
+                # Verificar amuletos
+                if user_data["amuleto"] < 1:
+                    return None, "❌ No tienes amuletos de invocación"
+                user_data["amuleto"] -= 1
+            else:
+                # Verificar monedas normales (usando el sistema económico existente)
+                user_economy_data = economy_system.get_user_data(user_id)
+                if user_economy_data["monedas"] < GACHA_CONFIG['amuleto_cost']:
+                    return None, f"❌ No tienes suficientes monedas. Necesitas {GACHA_CONFIG['amuleto_cost']}"
+                user_economy_data["monedas"] -= GACHA_CONFIG['amuleto_cost']
+            
+            # Verificar espacio en inventario
+            if len(user_data["personajes"]) >= GACHA_CONFIG['max_inventory_size']:
+                return None, "❌ Tu inventario de personajes está lleno"
+            
+            # Realizar invocación
+            rarity = self.get_rarity()
+            character = self.get_random_character(rarity)
+            
+            # Añadir a inventario
+            user_data["personajes"].append(character)
+            user_data["total_invocaciones"] += 1
+            user_data["personajes_unicos"].add(character["id"])
+            user_data["historial_invocaciones"].append({
+                "character_id": character["id"],
+                "timestamp": datetime.now().isoformat(),
+                "rareza": rarity
+            })
+            
+            # Limitar historial a últimos 50
+            user_data["historial_invocaciones"] = user_data["historial_invocaciones"][-50:]
+            
+            # Actualizar estadísticas globales
+            self._cache["global_stats"]["total_invocaciones"] += 1
+            self._cache["global_stats"]["personajes_obtenidos"][character["id"]] = \
+                self._cache["global_stats"]["personajes_obtenidos"].get(character["id"], 0) + 1
+            
+            if rarity == "mitico":
+                self._cache["global_stats"]["ultimo_mitico"] = {
+                    "user_id": user_id,
+                    "character": character["nombre"],
+                    "timestamp": datetime.now().isoformat()
+                }
+            
+            return character, f"🎉 ¡Has invocado a {character['nombre']}!"
+        
+        return await self._atomic_operation(operation)
+    
+    async def claim_coins(self, user_id: str):
+        """Reclamar monedas de los personajes"""
+        async def operation():
+            user_data = self.get_user_data(user_id)
+            now = datetime.now()
+            
+            # Verificar cooldown global
+            if user_data["ultimo_claim"]:
+                last_claim = datetime.fromisoformat(user_data["ultimo_claim"])
+                if now - last_claim < timedelta(hours=23):
+                    next_claim = last_claim + timedelta(hours=24)
+                    time_left = next_claim - now
+                    hours = int(time_left.seconds / 3600)
+                    minutes = int((time_left.seconds % 3600) / 60)
+                    return None, f"⏰ Ya reclamaste hoy. Podrás reclamar nuevamente en {hours}h {minutes}m"
+            
+            total_coins = 0
+            characters_claimed = 0
+            
+            for character in user_data["personajes"]:
+                # Si nunca se ha reclamado o ha pasado una semana
+                if not character["ultimo_claim"]:
+                    can_claim = True
+                else:
+                    last_claim = datetime.fromisoformat(character["ultimo_claim"])
+                    can_claim = (now - last_claim) >= timedelta(days=GACHA_CONFIG['claim_cooldown_days'])
+                
+                if can_claim:
+                    rarity_multiplier = ANIME_RARITY_SYSTEM[character["rareza"]]["coin_multiplier"]
+                    coins_earned = int(GACHA_CONFIG['coins_per_week'] * rarity_multiplier)
+                    total_coins += coins_earned
+                    characters_claimed += 1
+                    character["ultimo_claim"] = now.isoformat()
+            
+            if total_coins > 0:
+                user_data["monedas_gacha"] += total_coins
+                user_data["ultimo_claim"] = now.isoformat()
+                
+                # Añadir monedas al sistema económico principal también
+                await economy_system.add_coins(user_id, total_coins)
+                
+                return total_coins, characters_claimed
+            else:
+                return None, "❌ No hay personajes listos para reclamar monedas"
+        
+        return await self._atomic_operation(operation)
+    
+    async def add_amuleto(self, user_id: str, amount: int = 1):
+        """Añadir amuletos a un usuario"""
+        async def operation():
+            user_data = self.get_user_data(user_id)
+            user_data["amuleto"] += amount
+            return user_data["amuleto"]
+        
+        return await self._atomic_operation(operation)
+    
+    async def get_user_stats(self, user_id: str):
+        """Obtener estadísticas del usuario"""
+        user_data = self.get_user_data(user_id)
+        
+        # Calcular distribución de rarezas
+        rarity_dist = {}
+        for character in user_data["personajes"]:
+            rareza = character["rareza"]
+            rarity_dist[rareza] = rarity_dist.get(rareza, 0) + 1
+        
+        # Personajes listos para claim
+        ready_for_claim = 0
+        now = datetime.now()
+        
+        for character in user_data["personajes"]:
+            if not character["ultimo_claim"]:
+                ready_for_claim += 1
+            else:
+                last_claim = datetime.fromisoformat(character["ultimo_claim"])
+                if (now - last_claim) >= timedelta(days=GACHA_CONFIG['claim_cooldown_days']):
+                    ready_for_claim += 1
+        
+        return {
+            "total_personajes": len(user_data["personajes"]),
+            "personajes_unicos": len(user_data["personajes_unicos"]),
+            "total_invocaciones": user_data["total_invocaciones"],
+            "amuleto": user_data["amuleto"],
+            "monedas_gacha": user_data["monedas_gacha"],
+            "rarity_dist": rarity_dist,
+            "ready_for_claim": ready_for_claim,
+            "ultimo_claim": user_data["ultimo_claim"]
+        }
+
+# Instancia global del sistema gacha
+anime_gacha_system = AnimeGachaSystem()
+
+# ============ COMANDOS DE GACHA ANIME ============
+@bot.command(name='invocar')
+async def invocar(ctx, usar_monedas: str = "amuleto"):
+    """Invocar un personaje de anime usando amuleto o monedas"""
+    try:
+        use_amuleto = usar_monedas.lower() in ["amuleto", "amu", "a"]
+        
+        if use_amuleto:
+            embed = discord.Embed(
+                title="🎴 Invocación Anime",
+                description=(
+                    "**Costo:** 1 Amuleto de Invocación\n\n"
+                    "**Probabilidades:**\n"
+                    "• Común: 55%\n• Raro: 30%\n• Épico: 10%\n• Legendario: 4%\n• Mítico: 1%\n\n"
+                    "¿Quieres realizar la invocación?"
+                ),
+                color=0xe91e63
+            )
+        else:
+            embed = discord.Embed(
+                title="🎴 Invocación Anime",
+                description=(
+                    f"**Costo:** {GACHA_CONFIG['amuleto_cost']} monedas\n\n"
+                    "**Probabilidades:**\n"
+                    "• Común: 55%\n• Raro: 30%\n• Épico: 10%\n• Legendario: 4%\n• Mítico: 1%\n\n"
+                    "¿Quieres realizar la invocación?"
+                ),
+                color=0xe91e63
+            )
+        
+        view = View()
+        confirm_button = Button(label="✨ ¡Invocar!", style=discord.ButtonStyle.success, emoji="🎴")
+        cancel_button = Button(label="❌ Cancelar", style=discord.ButtonStyle.danger)
+        
+        async def confirm_callback(interaction):
+            if interaction.user.id != ctx.author.id:
+                await interaction.response.send_message("❌ Este menú no es para ti", ephemeral=True)
+                return
+            
+            result = await anime_gacha_system.invocar_personaje(str(interaction.user.id), use_amuleto)
+            
+            if result is None:
+                await interaction.response.send_message("❌ Error en el sistema de invocación", ephemeral=True)
+                return
+            
+            character, message = result
+            
+            if character is None:
+                await interaction.response.send_message(message, ephemeral=True)
+                return
+            
+            # Crear embed del resultado
+            rarity_data = ANIME_RARITY_SYSTEM[character["rareza"]]
+            embed_result = discord.Embed(
+                title=f"🎉 ¡{character['nombre']}!",
+                description=(
+                    f"**Serie:** {character['serie']}\n"
+                    f"**Rareza:** {character['rareza'].upper()}\n"
+                    f"**Monedas/semana:** {int(GACHA_CONFIG['coins_per_week'] * rarity_data['coin_multiplier'])}\n\n"
+                    f"*ID: `{character['unique_id']}`*"
+                ),
+                color=rarity_data["color"]
+            )
+            
+            # Añadir imagen si está disponible
+            if character.get("image_url"):
+                embed_result.set_thumbnail(url=character["image_url"])
+            
+            embed_result.set_author(
+                name=f"{rarity_data['emoji']} ¡Nuevo personaje obtenido!",
+                icon_url=interaction.user.display_avatar.url
+            )
+            
+            # Añadir efectos visuales según rareza
+            if character["rareza"] == "mitico":
+                embed_result.set_footer(text="⭐ ¡PERSONAJE MÍTICO! ⭐")
+            elif character["rareza"] == "legendario":
+                embed_result.set_footer(text="🔥 ¡PERSONAJE LEGENDARIO! 🔥")
+            
+            await interaction.response.send_message(embed=embed_result)
+        
+        async def cancel_callback(interaction):
+            if interaction.user.id != ctx.author.id:
+                await interaction.response.send_message("❌ Este menú no es para ti", ephemeral=True)
+                return
+            await interaction.response.send_message("❌ Invocación cancelada", ephemeral=True)
+        
+        confirm_button.callback = confirm_callback
+        cancel_button.callback = cancel_callback
+        
+        view.add_item(confirm_button)
+        view.add_item(cancel_button)
+        
+        await ctx.send(embed=embed, view=view)
+        
+    except Exception as e:
+        logger.error(f"Error en comando invocar: {e}")
+        await ctx.send("❌ Error al realizar la invocación")
+
+@bot.command(name='claim')
+async def claim(ctx):
+    """Reclamar monedas de los personajes"""
+    try:
+        result = await anime_gacha_system.claim_coins(str(ctx.author.id))
+        
+        if result is None:
+            await ctx.send("❌ Error en el sistema de claim")
+            return
+        
+        if isinstance(result, tuple) and len(result) == 2:
+            total_coins, characters_claimed = result
+            
+            embed = discord.Embed(
+                title="💰 Recompensas Reclamadas",
+                description=(
+                    f"**Monedas obtenidas:** {total_coins} 💰\n"
+                    f"**Personajes que pagaron:** {characters_claimed} 🎴\n\n"
+                    f"**Monedas añadidas a tu cuenta principal**\n"
+                    f"¡Vuelve en una semana para reclamar nuevamente!"
+                ),
+                color=0x00ff88
+            )
+            
+            # Obtener datos actualizados
+            user_stats = await anime_gacha_system.get_user_stats(str(ctx.author.id))
+            user_economy_data = economy_system.get_user_data(str(ctx.author.id))
+            
+            embed.add_field(
+                name="📊 Estado Actual",
+                value=(
+                    f"**Monedas totales:** {user_economy_data['monedas']}\n"
+                    f"**Amuletos:** {user_stats['amuleto']}\n"
+                    f"**Personajes listos:** {user_stats['ready_for_claim']}/{user_stats['total_personajes']}"
+                ),
+                inline=True
+            )
+            
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send(result)
+            
+    except Exception as e:
+        logger.error(f"Error en comando claim: {e}")
+        await ctx.send("❌ Error al reclamar monedas")
+
+@bot.command(name='personajes')
+async def personajes(ctx, pagina: int = 1):
+    """Ver tu colección de personajes"""
+    try:
+        user_data = anime_gacha_system.get_user_data(str(ctx.author.id))
+        characters = user_data["personajes"]
+        
+        if not characters:
+            embed = discord.Embed(
+                title="🎴 Colección Vacía",
+                description="No tienes personajes en tu colección.\nUsa `!invocar` para obtener algunos!",
+                color=0x95a5a6
+            )
+            await ctx.send(embed=embed)
+            return
+        
+        # Paginación
+        items_per_page = 6
+        start_idx = (pagina - 1) * items_per_page
+        end_idx = start_idx + items_per_page
+        paginated_chars = characters[start_idx:end_idx]
+        total_pages = max(1, (len(characters) + items_per_page - 1) // items_per_page)
+        
+        embed = discord.Embed(
+            title=f"🎴 Colección de {ctx.author.display_name}",
+            description=f"**Total personajes:** {len(characters)}",
+            color=0xe91e63
+        )
+        
+        # Añadir personajes a la página actual
+        for character in paginated_chars:
+            rarity_data = ANIME_RARITY_SYSTEM[character["rareza"]]
+            
+            # Calcular estado de claim
+            now = datetime.now()
+            if not character["ultimo_claim"]:
+                claim_status = "✅ Listo"
+            else:
+                last_claim = datetime.fromisoformat(character["ultimo_claim"])
+                days_passed = (now - last_claim).days
+                if days_passed >= GACHA_CONFIG['claim_cooldown_days']:
+                    claim_status = "✅ Listo"
+                else:
+                    days_left = GACHA_CONFIG['claim_cooldown_days'] - days_passed
+                    claim_status = f"⏳ {days_left}d"
+            
+            coins_per_week = int(GACHA_CONFIG['coins_per_week'] * rarity_data['coin_multiplier'])
+            
+            embed.add_field(
+                name=f"{rarity_data['emoji']} {character['nombre']}",
+                value=(
+                    f"**Serie:** {character['serie']}\n"
+                    f"**Rareza:** {character['rareza'].title()}\n"
+                    f"**Ganancia:** {coins_per_week}💰/semana\n"
+                    f"**Estado:** {claim_status}\n"
+                    f"**ID:** `{character['unique_id']}`"
+                ),
+                inline=True
+            )
+        
+        embed.set_footer(text=f"Página {pagina}/{total_pages} | Usa !personajes <número> para navegar")
+        
+        await ctx.send(embed=embed)
+        
+    except Exception as e:
+        logger.error(f"Error en comando personajes: {e}")
+        await ctx.send("❌ Error al ver la colección")
+
+@bot.command(name='estadisticas_gacha')
+async def estadisticas_gacha(ctx, usuario: discord.Member = None):
+    """Ver estadísticas del sistema gacha"""
+    try:
+        if usuario is None:
+            usuario = ctx.author
+        
+        user_stats = await anime_gacha_system.get_user_stats(str(usuario.id))
+        global_stats = anime_gacha_system._cache["global_stats"]
+        
+        embed = discord.Embed(
+            title=f"📊 Estadísticas Gacha - {usuario.display_name}",
+            color=0x9c27b0
+        )
+        
+        # Estadísticas del usuario
+        embed.add_field(
+            name="🎴 Colección",
+            value=(
+                f"**Personajes:** {user_stats['total_personajes']}\n"
+                f"**Únicos:** {user_stats['personajes_unicos']}\n"
+                f"**Invocaciones:** {user_stats['total_invocaciones']}"
+            ),
+            inline=True
+        )
+        
+        embed.add_field(
+            name="💎 Recursos",
+            value=(
+                f"**Amuletos:** {user_stats['amuleto']}\n"
+                f"**Monedas Gacha:** {user_stats['monedas_gacha']}\n"
+                f"**Listos para claim:** {user_stats['ready_for_claim']}"
+            ),
+            inline=True
+        )
+        
+        # Distribución de rarezas
+        if user_stats['rarity_dist']:
+            rarity_text = "\n".join([
+                f"{ANIME_RARITY_SYSTEM[rarity]['emoji']} **{rarity.title()}:** {count}"
+                for rarity, count in user_stats['rarity_dist'].items()
+            ])
+            embed.add_field(name="📈 Rarezas", value=rarity_text, inline=True)
+        
+        # Estadísticas globales
+        embed.add_field(
+            name="🌍 Estadísticas Globales",
+            value=(
+                f"**Total invocaciones:** {global_stats['total_invocaciones']}\n"
+                f"**Personajes únicos obtenidos:** {len(global_stats['personajes_obtenidos'])}\n"
+                f"**Último mítico:** {global_stats['ultimo_mitico']['character'] if global_stats['ultimo_mitico'] else 'Ninguno'}"
+            ),
+            inline=False
+        )
+        
+        embed.set_thumbnail(url=usuario.display_avatar.url)
+        
+        await ctx.send(embed=embed)
+        
+    except Exception as e:
+        logger.error(f"Error en comando estadisticas_gacha: {e}")
+        await ctx.send("❌ Error al ver las estadísticas")
+
+@bot.command(name='comprar_amuleto')
+async def comprar_amuleto(ctx, cantidad: int = 1):
+    """Comprar amuletos de invocación con monedas"""
+    try:
+        if cantidad < 1:
+            await ctx.send("❌ La cantidad debe ser al menos 1")
+            return
+        
+        total_cost = GACHA_CONFIG['amuleto_cost'] * cantidad
+        
+        # Verificar monedas en el sistema económico
+        user_economy_data = economy_system.get_user_data(str(ctx.author.id))
+        if user_economy_data["monedas"] < total_cost:
+            await ctx.send(f"❌ No tienes suficientes monedas. Necesitas {total_cost}")
+            return
+        
+        # Realizar compra
+        success = await economy_system.remove_coins(str(ctx.author.id), total_cost)
+        if not success:
+            await ctx.send("❌ Error al procesar la compra")
+            return
+        
+        # Añadir amuletos
+        new_amuleto_count = await anime_gacha_system.add_amuleto(str(ctx.author.id), cantidad)
+        
+        embed = discord.Embed(
+            title="🛒 Compra Exitosa",
+            description=(
+                f"**Has comprado {cantidad} amuleto(s) de invocación**\n\n"
+                f"**Costo total:** {total_cost} monedas\n"
+                f"**Amuletos actuales:** {new_amuleto_count}\n\n"
+                f"¡Usa `!invocar` para usar tus nuevos amuletos!"
+            ),
+            color=0x00ff88
+        )
+        
+        await ctx.send(embed=embed)
+        
+    except Exception as e:
+        logger.error(f"Error en comando comprar_amuleto: {e}")
+        await ctx.send("❌ Error al comprar amuletos")
+
+@bot.command(name='gacha_info')
+async def gacha_info(ctx):
+    """Información del sistema gacha anime"""
+    embed = discord.Embed(
+        title="🎴 Sistema Gacha Anime - Guía",
+        description="Sistema de colección de personajes de anime con recompensas semanales",
+        color=0xe91e63
+    )
+    
+    embed.add_field(
+        name="✨ Invocaciones",
+        value=(
+            "`!invocar` - Invocar con amuleto (predeterminado)\n"
+            "`!invocar monedas` - Invocar con monedas\n"
+            f"**Costo amuleto:** 1 amuleto\n"
+            f"**Costo monedas:** {GACHA_CONFIG['amuleto_cost']} monedas"
+        ),
+        inline=False
+    )
+    
+    embed.add_field(
+        name="💰 Reclamaciones",
+        value=(
+            "`!claim` - Reclamar monedas de personajes\n"
+            f"**Frecuencia:** Cada {GACHA_CONFIG['claim_cooldown_days']} días\n"
+            f"**Base por personaje:** {GACHA_CONFIG['coins_per_week']} monedas/semana\n"
+            "**Multiplicadores por rareza:** Común 1x, Raro 1.5x, Épico 2x, Legendario 3x, Mítico 5x"
+        ),
+        inline=False
+    )
+    
+    embed.add_field(
+        name="📊 Gestión",
+        value=(
+            "`!personajes [página]` - Ver tu colección\n"
+            "`!estadisticas_gacha [@usuario]` - Ver estadísticas\n"
+            "`!comprar_amuleto [cantidad]` - Comprar amuletos"
+        ),
+        inline=False
+    )
+    
+    embed.add_field(
+        name="🎰 Probabilidades",
+        value=(
+            "**Común:** 55%\n**Raro:** 30%\n**Épico:** 10%\n**Legendario:** 4%\n**Mítico:** 1%"
+        ),
+        inline=True
+    )
+    
+    embed.set_footer(text="¡Colecciona a todos tus personajes favoritos!")
+    
+    await ctx.send(embed=embed)
 
 
 
