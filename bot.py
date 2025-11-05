@@ -16,6 +16,7 @@ import uuid
 from datetime import datetime
 
 
+
 # Configurar logging para mejor control
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('discord')
@@ -29,17 +30,17 @@ if not TOKEN:
 	print("ERROR: No se encontró la variable TOKEN en .env")
 	exit()
 
-# Configuración optimizada del bot
+# Configuración del bot
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
-# Bot con configuración optimizada
+# Bot
 bot = commands.Bot(
 	command_prefix='!', 
 	intents=intents, 
 	help_command=None,
-	max_messages=1000  # Reducir cache de mensajes
+	max_messages=1000  #cache de mensajes
 )
 
 # ============ CONFIGURACIONES GLOBALES ============
@@ -52,7 +53,7 @@ CONFIG = {
 	'guide_channel': 1429889947892060180
 }
 
-# ============ SISTEMA DE NORMALIZACIÓN OPTIMIZADO ============
+# ============ SISTEMA DE NORMALIZACIÓN ============
 def normalizar_comando(texto: str) -> str:
 	"""Función optimizada para normalización de comandos"""
 	if not texto.startswith('!'):
@@ -63,13 +64,13 @@ def normalizar_comando(texto: str) -> str:
 	texto = "".join(c for c in texto if unicodedata.category(c) != "Mn")
 	
 	# Preservar menciones y espacios importantes
-	texto = texto.replace("<#", " <#").replace("! ", "!").replace(" !","!")
+	texto = texto.replace(" <@", "<@").replace(" <#", "<#").replace("! ", "!").replace(" !","!")
 	return ' '.join(texto.split())
 
 # ============ EVENTOS PRINCIPALES ============
 @bot.event
 async def on_ready():
-	"""Evento on_ready optimizado"""
+	
 	print(f'✅ {bot.user} conectado exitosamente!')
 	
 	try:
@@ -80,7 +81,6 @@ async def on_ready():
 
 @bot.event
 async def on_member_join(member):
-	"""Bienvenida optimizada"""
 	channel = member.guild.get_channel(CONFIG['welcome_channel'])
 	if channel:
 		mensajes = [
@@ -105,7 +105,6 @@ async def on_member_join(member):
 
 @bot.event
 async def on_message(message):
-	"""Interceptación de mensajes optimizada"""
 	if message.author.bot:
 		return
 	
@@ -117,10 +116,9 @@ async def on_message(message):
 # ============ COMANDOS DE TEXTO OPTIMIZADOS ============
 @bot.command(name='ayuda')
 async def ayuda(ctx):
-	"""Comando de ayuda humorístico"""
 	respuestas = [
 		"Q te pasa we?",
-		"¿Necesitas ayuda? ¡Usa `!comandos`! ",
+		"¿Necesitas ayuda? ¡Usa `!comandos`!",
 		"No sé we, ¿por qué me preguntas a mí?"
 	]
 	await ctx.send(random.choice(respuestas))
@@ -134,7 +132,7 @@ async def besame(ctx):
 async def status(ctx):
 	"""Verificación de estado mejorada"""
 	embed = discord.Embed(
-		title="✅ Estado del Servidor",
+		title="Estado del Servidor",
 		description="**Status: 200 OK** 🟢",
 		color=discord.Color.green()
 	)
@@ -150,22 +148,22 @@ async def besaa(ctx, usuario: discord.Member = None):
 	
 	if usuario == ctx.author:
 		respuestas = [
-			"¿Quieres besarte a ti mismo? ",
-			"Primero un cafecito, ¿no? ☕" 
-			"Eso es un poco raro... "
+			"¿Quieres besarte a ti mismo?",
+			"Primero un cafecito, ¿no?",
+			"Eso es un poco raro..."
 		]
 		await ctx.send(random.choice(respuestas))
 		return
 
 	respuestas = [
 		f"\\*besa a {usuario.mention}\\* y luego sigue con su vida tranquila...",
-		f"\\*besa a {usuario.mention}\\* y se queda sonriendo... 😊",
+		f"\\*besa a {usuario.mention}\\* y se queda sonriendo...",
 		f"¡Wow!\\n\\*besa a {usuario.mention}\\* y desaparece misteriosamente 🎭",
 		f"¡Momento épico!\\n\\*besa a {usuario.mention}\\* y continúa su aventura ⚔️",
-		f"\\*besa a {usuario.mention}\\* ",
-		f"¡Sorpresa!\\n\\*besa a {usuario.mention}\\* y todos... \\n se quedan en silencio xd ",
-		f"\\*besa a {usuario.mention}\\* y sonríe tímidamente... ",
-		f"En secreto\\n\\*besa a {usuario.mention}\\* y se escabulle sin que nadie lo note ",
+		f"\\*besa a {usuario.mention}\\*",
+		f"¡Sorpresa!\\n\\*besa a {usuario.mention}\\* y todos... \\n se quedan en silencio xd 🤫",
+		f"\\*besa a {usuario.mention}\\* y sonríe tímidamente... 😳",
+		f"En secreto\\n\\*besa a {usuario.mention}\\* y se escabulle sin que nadie lo note 🕵️",
 		f"Con estilo \\n \\*besa a {usuario.mention}\\* y hace una reverencia 🎩",
 		f"\\*besa a {usuario.mention}\\* y luego se aleja lentamente… 🌸"
 	]
@@ -174,7 +172,6 @@ async def besaa(ctx, usuario: discord.Member = None):
 
 @bot.command(name='info')
 async def info(ctx):
-	"""Información del bot optimizada"""
 	mensajes = [
 		f"¡Hola {ctx.author.mention}! 🌸 Soy **Yuki**, tu bot amigable 💖",
 		f"¡Hey {ctx.author.mention}! 🌷 Soy **Yuki** 💜",
@@ -204,7 +201,6 @@ async def info(ctx):
 
 @bot.command(name='hola')
 async def hola(ctx):
-	"""Saludo optimizado"""
 	saludos = [
 		f"Hey {ctx.author.mention}, ¿qué tal? ❤️❤️",
 		f"¡Hola {ctx.author.mention}! 👋",
@@ -227,7 +223,6 @@ async def hola(ctx):
 
 @bot.command(name='qhago')
 async def qhago(ctx):
-	"""Comando humorístico optimizado"""
 	respuesta = random.choice([
 		"no sé we. ¿por qué me preguntas a mi?",
 		"¿Yo qué sé? Pregúntale a Google",
@@ -235,8 +230,7 @@ async def qhago(ctx):
 	])
 	await ctx.send(f"{respuesta} <:mmm:1429328016307130378>")
 
-# ============ SISTEMA DE MÚSICA OPTIMIZADO ============
-# ============ SISTEMA DE MÚSICA CON OPCIONES PREDEFINIDAS ============
+# ============ SISTEMA DE MÚSICA ============
 
 class MusicSystem:
     """Sistema de música optimizado y corregido"""
@@ -289,7 +283,6 @@ class MusicSystem:
         return self._event_loops[guild_id]
     
     async def play_next(self, guild_id: int, vc: discord.VoiceClient):
-        """Reproducir siguiente canción optimizado - CORREGIDO"""
         try:
             # Verificar si todavía estamos conectados
             if not vc or not vc.is_connected():
@@ -387,7 +380,6 @@ class MusicSystem:
             await self._safe_play_next(guild_id, vc)
     
     async def _safe_play_next(self, guild_id: int, vc: discord.VoiceClient):
-        """Versión segura de play_next con manejo de errores"""
         try:
             await self.play_next(guild_id, vc)
         except Exception as e:
@@ -413,10 +405,10 @@ class MusicSystem:
         except Exception as e:
             logger.error(f"Error limpiando guild {guild_id}: {e}")
 
-# Instancia del sistema de música corregido
+# Instancia del sistema de música
 music_system = MusicSystem()
 
-# ============ COMANDOS DE MÚSICA ACTUALIZADOS ============
+# ============ COMANDOS DE MÚSICA ============
 @bot.tree.command(name="play", description="Sistema de música - Reproduce canciones")
 @app_commands.describe(
     action="Qué quieres hacer"
@@ -430,7 +422,7 @@ music_system = MusicSystem()
     app_commands.Choice(name="🎶 Lista de canciones", value="list")
 ])
 async def play(interaction: discord.Interaction, action: app_commands.Choice[str]):
-    """Comando de música unificado - CORREGIDO"""
+    
     
     action_value = action.value
     
@@ -639,7 +631,7 @@ async def abrazar(interaction: discord.Interaction, usuario: discord.Member):
 		"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS6KUK3rUl_EftABW5DSPZyG76hPQmB-2z1hQ&usqp=CAU",
 		"https://i.pinimg.com/originals/85/dc/ef/85dcef131af84b515106955e142df54e.gif",
 		"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTN4yetNRO1ky7oC6afzeO2nZp1gIj98pxSUkeSSn7m-AwaqeFzqvBFUTO2&s=10",
-		"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvpnugFc8GUOp116MXRshYsaBFrRRm-9etvg&usqp=CAU",
+		"./images/17623616496654339245968767173004.gif",
 		"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5b1fr9fbn_bjqCgJDNKZZI-0ptFAZ96zP2xCWK-vHxGmDmR9v5b98z_c&s=10",
 		"https://i.pinimg.com/1200x/4f/3b/3b/4f3b3b7976e63222d8bda521eb5c5ab2.jpg",
 		"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS33rofShkbjg4AXQrq8xgrbjP77Jc3dUKmI_X_CTsChTR6YESWeuiCKB8T&s=10",
@@ -675,7 +667,7 @@ async def comandos(ctx):
 			"`!info` - Información sobre mí\n"
 			"`!200` - Estado del servidor\n"
 			"`!comandos` - Este menú\n\n"
-			"**😊 INTERACCIÓN SOCIAL**\n"
+			"**INTERACCIÓN SOCIAL**\n"
 			"`!besaa @usuario` - Envía un beso\n"
 			"`!besame` - Versión especial\n"
 			"`!qhago` - Respuesta humorística\n\n"
@@ -711,7 +703,7 @@ async def comandos(ctx):
 		embed_special = discord.Embed(
 			title="🔮 **Comandos Especiales**",
 			description=(
-				"**🎭 COMANDOS DE INTERACCIÓN**\n"
+				"**COMANDOS DE INTERACCIÓN**\n"
 				"`/felizcumple @usuario` - Felicitación personalizada\n"
 				"`/abrazar @usuario` - Abrazo virtual con GIF\n\n"
 				"**📋 INFORMACIÓN DEL SERVIDOR**\n"
@@ -868,13 +860,12 @@ async def evento(interaction: discord.Interaction, modo: str = "individual"):
 			ephemeral=True
 		)
 
-# ============ COMANDO GUIAME OPTIMIZADO ============
+# ============ COMANDO GUIAME ============
 @bot.tree.command(
 	name="guiame",
 	description="Muestra lista de canales de texto disponibles"
 )
 async def guiame(interaction: discord.Interaction):
-	"""Comando guiame optimizado"""
 	if interaction.channel_id != CONFIG['guide_channel']:
 		await interaction.response.send_message(
 			f"❌ Este comando solo puede usarse en <#{CONFIG['guide_channel']}>",
@@ -911,10 +902,10 @@ async def guiame(interaction: discord.Interaction):
 	embed.set_footer(text=f"Solicitado por {interaction.user.display_name}")
 	await interaction.response.send_message(embed=embed)
 
-# ============ NUEVA FUNCIÓN: SISTEMA DE ESTADÍSTICAS ============
+# ============ SISTEMA DE ESTADÍSTICAS ============
 @bot.tree.command(name="estadisticas", description="Muestra estadísticas del servidor")
 async def estadisticas(interaction: discord.Interaction):
-	"""NUEVA FUNCIÓN: Estadísticas del servidor"""
+	"""Estadísticas del servidor"""
 	guild = interaction.guild
 	
 	embed = discord.Embed(
@@ -963,7 +954,70 @@ async def estadisticas(interaction: discord.Interaction):
 
 
 
-# ============ COMANDO DE RECOMENDACIONES CON CHOICES ============
+
+# ============ CLASE DEL SISTEMA DE RECOMENDACIONES ============
+class RecommendationSystem:
+    def __init__(self, file_path='recomendaciones.json'):
+        self.file_path = file_path
+        self.recomendaciones = self._load_recommendations()
+    
+    def _load_recommendations(self):
+        """Carga las recomendaciones desde el archivo JSON"""
+        try:
+            if os.path.exists(self.file_path):
+                with open(self.file_path, 'r', encoding='utf-8') as file:
+                    return json.load(file)
+            else:
+                # Crear estructura básica si el archivo no existe
+                base_structure = {
+                    "juego": [],
+                    "musica": [],
+                    "pelicula": [],
+                    "libro": [],
+                    "anime": [],
+                    "serie": [],
+                    "podcast": []
+                }
+                with open(self.file_path, 'w', encoding='utf-8') as file:
+                    json.dump(base_structure, file, ensure_ascii=False, indent=2)
+                return base_structure
+        except Exception as e:
+            print(f"Error cargando recomendaciones: {e}")
+            return {}
+    
+    def get_recommendation(self, category):
+        """Obtiene una recomendación aleatoria de una categoría"""
+        if category in self.recomendaciones and self.recomendaciones[category]:
+            return random.choice(self.recomendaciones[category])
+        return None
+    
+    def get_available_categories(self):
+        """Obtiene las categorías disponibles"""
+        return list(self.recomendaciones.keys())
+    
+    def add_recommendation(self, category, recommendation):
+        """Añade una nueva recomendación a una categoría"""
+        if category not in self.recomendaciones:
+            self.recomendaciones[category] = []
+        
+        if recommendation not in self.recomendaciones[category]:
+            self.recomendaciones[category].append(recommendation)
+            self._save_recommendations()
+            return True
+        return False
+    
+    def _save_recommendations(self):
+        """Guarda las recomendaciones en el archivo JSON"""
+        try:
+            with open(self.file_path, 'w', encoding='utf-8') as file:
+                json.dump(self.recomendaciones, file, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"Error guardando recomendaciones: {e}")
+
+# ============ INICIALIZACIÓN DEL SISTEMA DE RECOMENDACIONES ============
+recommendation_system = RecommendationSystem('recomendaciones.json')
+
+# ============ COMANDO DE RECOMENDACIONES ============
 @bot.tree.command(name="recomendacion", description="Obtén una recomendación aleatoria")
 @app_commands.describe(tipo="Tipo de recomendación")
 @app_commands.choices(tipo=[
@@ -1082,6 +1136,77 @@ async def recomendar(interaction: discord.Interaction, tipo: str):
     
     await interaction.response.send_message(embed=embed)
 
+# ============ COMANDO PARA AÑADIR RECOMENDACIONES ============
+@bot.tree.command(name="añadir_recomendacion", description="Añade una nueva recomendación al sistema")
+@app_commands.describe(
+    categoria="Categoría de la recomendación",
+    recomendacion="La recomendación a añadir"
+)
+async def añadir_recomendacion(interaction: discord.Interaction, categoria: str, recomendacion: str):
+    """Añade una nueva recomendación al sistema"""
+    
+    available_categories = recommendation_system.get_available_categories()
+    
+    if categoria not in available_categories:
+        embed = discord.Embed(
+            title="❌ Categoría Inválida",
+            description=(
+                f"La categoría `{categoria}` no existe.\n\n"
+                f"**Categorías disponibles:**\n"
+                f"{', '.join([f'`{cat}`' for cat in available_categories])}"
+            ),
+            color=0xe74c3c
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+        return
+    
+    if recommendation_system.add_recommendation(categoria, recomendacion):
+        embed = discord.Embed(
+            title="✅ Recomendación Añadida",
+            description=f"Se añadió **{recomendacion}** a la categoría **{categoria}**",
+            color=0x2ecc71
+        )
+    else:
+        embed = discord.Embed(
+            title="⚠️ Recomendación Duplicada",
+            description=f"**{recomendacion}** ya existe en la categoría **{categoria}**",
+            color=0xf39c12
+        )
+    
+    await interaction.response.send_message(embed=embed)
+
+# ============ COMANDO PARA VER ESTADÍSTICAS ============
+@bot.tree.command(name="estadisticas_recomendaciones", description="Muestra las estadísticas del sistema de recomendaciones")
+async def estadisticas_recomendaciones(interaction: discord.Interaction):
+    """Muestra cuántas recomendaciones hay en cada categoría"""
+    
+    stats = {cat: len(items) for cat, items in recommendation_system.recomendaciones.items()}
+    total_recomendaciones = sum(stats.values())
+    
+    embed = discord.Embed(
+        title="📊 Estadísticas de Recomendaciones",
+        color=discord.Color.blue()
+    )
+    
+    for categoria, cantidad in stats.items():
+        embed.add_field(
+            name=f"{categoria.title()} ({cantidad})",
+            value="▰" * min(cantidad, 20) + "▱" * max(0, 20 - cantidad),
+            inline=False
+        )
+    
+    embed.set_footer(text=f"Total de recomendaciones en el sistema: {total_recomendaciones}")
+    
+    await interaction.response.send_message(embed=embed)
+
+
+
+
+
+
+
+
+
 # ============ COMANDO DE AYUDA MEJORADO ============
 @bot.tree.command(name="recomendacion_help", description="Ayuda completa del sistema de recomendaciones")
 async def recomendacion_help(interaction: discord.Interaction):
@@ -1180,6 +1305,27 @@ async def on_ready():
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # ============ SISTEMA DE ECONOMÍA Y GACHA ============
 # Configuración de la economía (agregar al inicio del código)
 ECONOMY_CONFIG = {
@@ -1475,341 +1621,7 @@ class EconomySystem:
 # Instancia global del sistema económico
 economy_system = EconomySystem()
 
-import asyncio
-import discord
-from discord.ext import commands
-from discord.ui import View, Button
-import json
-import os
-import random
-import uuid
-from datetime import datetime
-import logging
-
-# Configuración de logging
-logger = logging.getLogger('discord_bot')
-
-# ============ SISTEMA DE ECONOMÍA Y GACHA ============
-# Configuración de la economía (agregar al inicio del código)
-ECONOMY_CONFIG = {
-    'daily_coins': 100,
-    'gacha_cost': 50,
-    'starting_coins': 200,
-    'max_inventory_size': 100
-}
-
-# Sistema de rarezas y probabilidades
-RARITY_SYSTEM = {
-    "comun": {"prob": 60, "color": 0x808080, "multiplier": 1.0},
-    "raro": {"prob": 25, "color": 0x0070DD, "multiplier": 2.5},
-    "epico": {"prob": 10, "color": 0xA335EE, "multiplier": 5.0},
-    "legendario": {"prob": 4, "color": 0xFF8000, "multiplier": 12.5},
-    "mitico": {"prob": 1, "color": 0xE6CC80, "multiplier": 25.0}
-}
-
-# Base de datos de items disponibles
-GACHA_ITEMS = {
-    "personajes": [
-        {"id": "char_001", "nombre": "Aventurero Novato", "tipo": "personaje", "rareza": "comun", "valor": 25},
-        {"id": "char_002", "nombre": "Guerrero del Sol", "tipo": "personaje", "rareza": "raro", "valor": 75},
-        {"id": "char_003", "nombre": "Mago Arcano", "tipo": "personaje", "rareza": "epico", "valor": 200},
-        {"id": "char_004", "nombre": "Caballero Divino", "tipo": "personaje", "rareza": "legendario", "valor": 500},
-        {"id": "char_005", "nombre": "Héroe del Destino", "tipo": "personaje", "rareza": "mitico", "valor": 1250}
-    ],
-    "armas": [
-        {"id": "wep_001", "nombre": "Espada de Hierro", "tipo": "arma", "rareza": "comun", "valor": 20},
-        {"id": "wep_002", "nombre": "Arco de Cazador", "tipo": "arma", "rareza": "comun", "valor": 20},
-        {"id": "wep_003", "nombre": "Báculo Mágico", "tipo": "arma", "rareza": "raro", "valor": 60},
-        {"id": "wep_004", "nombre": "Espada de Plata", "tipo": "arma", "rareza": "epico", "valor": 150},
-        {"id": "wep_005", "nombre": "Hacha del Titán", "tipo": "arma", "rareza": "legendario", "valor": 400},
-        {"id": "wep_006", "nombre": "Excalibur", "tipo": "arma", "rareza": "mitico", "valor": 1000}
-    ],
-    "artefactos": [
-        {"id": "art_001", "nombre": "Anillo de Bronce", "tipo": "artefacto", "rareza": "comun", "valor": 15},
-        {"id": "art_002", "nombre": "Amuleto de Fuerza", "tipo": "artefacto", "rareza": "raro", "valor": 45},
-        {"id": "art_003", "nombre": "Capa de la Invisibilidad", "tipo": "artefacto", "rareza": "epico", "valor": 120},
-        {"id": "art_004", "nombre": "Corona del Rey", "tipo": "artefacto", "rareza": "legendario", "valor": 300},
-        {"id": "art_005", "nombre": "Orbe del Infinito", "tipo": "artefacto", "rareza": "mitico", "valor": 750}
-    ],
-    "mascotas": [
-        {"id": "pet_001", "nombre": "Gatito", "tipo": "mascota", "rareza": "comun", "valor": 30},
-        {"id": "pet_002", "nombre": "Lobo Joven", "tipo": "mascota", "rareza": "raro", "valor": 90},
-        {"id": "pet_003", "nombre": "Fénix", "tipo": "mascota", "rareza": "epico", "valor": 250},
-        {"id": "pet_004", "nombre": "Dragón", "tipo": "mascota", "rareza": "legendario", "valor": 600},
-        {"id": "pet_005", "nombre": "Fénix Ancestral", "tipo": "mascota", "rareza": "mitico", "valor": 1500}
-    ]
-}
-
-class EconomySystem:
-    """Sistema de economía optimizado para alto tráfico - CORREGIDO"""
-    
-    def __init__(self):
-        self.data_file = 'economy_data.json'
-        self._cache = {}  # Cache en memoria para rápido acceso
-        self._lock = asyncio.Lock()  # Lock para evitar condiciones de carrera
-        self._active_sales = {}  # Diccionario para rastrear ventas activas por usuario
-        self._load_data()
-    
-    def _load_data(self):
-        """Cargar datos desde JSON - optimizado"""
-        try:
-            if os.path.exists(self.data_file):
-                with open(self.data_file, 'r', encoding='utf-8') as f:
-                    self._cache = json.load(f)
-            else:
-                self._cache = {"users": {}, "last_daily": {}}
-                self._save_data()
-        except Exception as e:
-            print(f"❌ Error cargando datos económicos: {e}")
-            self._cache = {"users": {}, "last_daily": {}}
-    
-    def _save_data(self):
-        """Guardar datos a JSON - optimizado con backup"""
-        try:
-            with open(self.data_file, 'w', encoding='utf-8') as f:
-                json.dump(self._cache, f, indent=2, ensure_ascii=False)
-        except Exception as e:
-            print(f"❌ Error guardando datos económicos: {e}")
-    
-    async def _atomic_operation(self, operation):
-        """Ejecutar operación atómicamente con lock - CORREGIDO"""
-        async with self._lock:
-            try:
-                result = await operation()  # CORREGIDO: añadir await
-                # Guardar de forma asíncrona sin bloquear
-                asyncio.create_task(self._async_save())
-                return result
-            except Exception as e:
-                print(f"❌ Error en operación atómica: {e}")
-                raise
-    
-    async def _async_save(self):
-        """Guardar de forma asíncrona"""
-        await asyncio.get_event_loop().run_in_executor(None, self._save_data)
-    
-    def get_user_data(self, user_id: str):
-        """Obtener datos de usuario de forma segura"""
-        user_id_str = str(user_id)
-        if user_id_str not in self._cache["users"]:
-            self._cache["users"][user_id_str] = {
-                "monedas": ECONOMY_CONFIG['starting_coins'],
-                "inventario": [],
-                "personajes_obtenidos": [],
-                "total_gachas": 0
-            }
-        return self._cache["users"][user_id_str]
-    
-    async def add_coins(self, user_id: str, amount: int):
-        """Añadir monedas a usuario"""
-        async def operation():
-            user_data = self.get_user_data(user_id)
-            user_data["monedas"] += amount
-            return user_data["monedas"]
-        
-        return await self._atomic_operation(operation)
-    
-    async def remove_coins(self, user_id: str, amount: int):
-        """Remover monedas de usuario"""
-        async def operation():
-            user_data = self.get_user_data(user_id)
-            if user_data["monedas"] < amount:
-                return False
-            user_data["monedas"] -= amount
-            return True
-        
-        return await self._atomic_operation(operation)
-    
-    def get_rarity(self):
-        """Obtener rareza basada en probabilidades"""
-        rand = random.random() * 100
-        cumulative = 0
-        
-        for rarity, data in RARITY_SYSTEM.items():
-            cumulative += data["prob"]
-            if rand <= cumulative:
-                return rarity
-        
-        return "comun"  # Fallback
-    
-    def get_random_item(self, rarity: str):
-        """Obtener item aleatorio de una rareza específica"""
-        # Filtrar todos los items de la rareza deseada
-        available_items = []
-        for category in GACHA_ITEMS.values():
-            for item in category:
-                if item["rareza"] == rarity:
-                    available_items.append(item)
-        
-        if available_items:
-            item = random.choice(available_items).copy()
-            # Añadir ID único y timestamp
-            item["unique_id"] = str(uuid.uuid4())[:8]
-            item["obtenido_en"] = datetime.now().isoformat()
-            return item
-        else:
-            # Fallback: crear item genérico
-            return {
-                "id": "fallback",
-                "unique_id": str(uuid.uuid4())[:8],
-                "nombre": f"Item {rarity.capitalize()}",
-                "tipo": "especial",
-                "rareza": rarity,
-                "valor": RARITY_SYSTEM[rarity]["multiplier"] * 20,
-                "obtenido_en": datetime.now().isoformat()
-            }
-    
-    async def gacha_pull(self, user_id: str):
-        """Realizar un pull del gacha - CORREGIDO"""
-        async def operation():
-            user_data = self.get_user_data(user_id)
-            
-            # Verificar si tiene monedas
-            if user_data["monedas"] < ECONOMY_CONFIG['gacha_cost']:
-                return None, "❌ No tienes suficientes monedas"
-            
-            # Verificar espacio en inventario
-            if len(user_data["inventario"]) >= ECONOMY_CONFIG['max_inventory_size']:
-                return None, "❌ Tu inventario está lleno"
-            
-            # Realizar pull
-            rarity = self.get_rarity()
-            item = self.get_random_item(rarity)
-            
-            # Añadir a inventario
-            user_data["inventario"].append(item)
-            user_data["monedas"] -= ECONOMY_CONFIG['gacha_cost']
-            user_data["total_gachas"] += 1
-            
-            # Si es personaje, añadir a lista de obtenidos
-            if item["tipo"] == "personaje":
-                user_data["personajes_obtenidos"].append(item["id"])
-            
-            return item, f"🎉 ¡Has obtenido un item {rarity.upper()}!"
-        
-        return await self._atomic_operation(operation)
-    
-    async def get_inventory(self, user_id: str, page: int = 1):
-        """Obtener inventario paginado"""
-        user_data = self.get_user_data(user_id)
-        inventory = user_data["inventario"]
-        
-        items_per_page = 10
-        start_idx = (page - 1) * items_per_page
-        end_idx = start_idx + items_per_page
-        
-        paginated_items = inventory[start_idx:end_idx]
-        total_pages = max(1, (len(inventory) + items_per_page - 1) // items_per_page)
-        
-        return paginated_items, total_pages, len(inventory)
-    
-    async def transfer_item(self, from_user_id: str, to_user_id: str, item_unique_id: str):
-        """Transferir item entre usuarios"""
-        async def operation():
-            from_user = self.get_user_data(from_user_id)
-            to_user = self.get_user_data(to_user_id)
-            
-            # Buscar item en inventario del remitente
-            item_index = None
-            item_to_transfer = None
-            
-            for i, item in enumerate(from_user["inventario"]):
-                if item.get("unique_id") == item_unique_id:
-                    item_index = i
-                    item_to_transfer = item
-                    break
-            
-            if item_index is None:
-                return False, "❌ Item no encontrado en tu inventario"
-            
-            # Verificar espacio en inventario del destinatario
-            if len(to_user["inventario"]) >= ECONOMY_CONFIG['max_inventory_size']:
-                return False, "❌ El inventario del destinatario está lleno"
-            
-            # Transferir item
-            from_user["inventario"].pop(item_index)
-            to_user["inventario"].append(item_to_transfer)
-            
-            return True, "✅ Item transferido exitosamente"
-        
-        return await self._atomic_operation(operation)
-    
-    async def sell_item(self, user_id: str, item_unique_id: str):
-        """Vender item por monedas"""
-        async def operation():
-            user_data = self.get_user_data(user_id)
-            
-            # Buscar item en inventario
-            item_index = None
-            item_to_sell = None
-            
-            for i, item in enumerate(user_data["inventario"]):
-                if item.get("unique_id") == item_unique_id:
-                    item_index = i
-                    item_to_sell = item
-                    break
-            
-            if item_index is None:
-                return False, "❌ Item no encontrado en tu inventario"
-            
-            # Calcular valor de venta (70% del valor original)
-            sell_value = int(item_to_sell["valor"] * 0.7)
-            
-            # Vender item
-            user_data["inventario"].pop(item_index)
-            user_data["monedas"] += sell_value
-            
-            return True, f"✅ Item vendido por {sell_value} monedas"
-        
-        return await self._atomic_operation(operation)
-    
-    async def claim_daily(self, user_id: str):
-        """Reclamar recompensa diaria"""
-        async def operation():
-            user_id_str = str(user_id)
-            today = datetime.now().date().isoformat()
-            
-            if user_id_str in self._cache["last_daily"]:
-                last_claim = self._cache["last_daily"][user_id_str]
-                if last_claim == today:
-                    return False, "❌ Ya reclamaste tu recompensa diaria hoy"
-            
-            # Dar recompensa
-            user_data = self.get_user_data(user_id)
-            user_data["monedas"] += ECONOMY_CONFIG['daily_coins']
-            self._cache["last_daily"][user_id_str] = today
-            
-            return True, f"✅ Recompensa diaria de {ECONOMY_CONFIG['daily_coins']} monedas obtenida"
-        
-        return await self._atomic_operation(operation)
-    
-    async def transfer_coins(self, from_user_id: str, to_user_id: str, amount: int):
-        """Transferir monedas entre usuarios"""
-        async def operation():
-            from_user = self.get_user_data(from_user_id)
-            to_user = self.get_user_data(to_user_id)
-            
-            if from_user["monedas"] < amount:
-                return False, "❌ No tienes suficientes monedas"
-            
-            if amount <= 0:
-                return False, "❌ La cantidad debe ser mayor a 0"
-            
-            # Transferir monedas
-            from_user["monedas"] -= amount
-            to_user["monedas"] += amount
-            
-            return True, f"✅ {amount} monedas transferidas exitosamente"
-        
-        return await self._atomic_operation(operation)
-
-# Instancia global del sistema económico
-economy_system = EconomySystem()
-
-# ============ COMANDOS DE ECONOMÍA MEJORADOS ============
-
-# Diccionario para rastrear ventas activas y evitar conflictos
-active_sales = {}
-
+# ============ COMANDOS DE ECONOMÍA CORREGIDOS ============
 @bot.command(name='gacha')
 async def gacha(ctx):
     """Comando para usar el sistema gacha - CORREGIDO"""
@@ -1912,17 +1724,18 @@ async def inventario(ctx, pagina: int = 1):
         
         # Crear embed del inventario
         embed = discord.Embed(
-            title=f"🎒 Inventario de {ctx.author.mention}",
+            title=f"🎒 Inventario de {ctx.author.mention}",#display_name → mention
             description=f"**Monedas:** {user_data['monedas']} | **Total items:** {total_items}",
             color=0x3498db
         )
         
         # Añadir items a la página actual
         for i, item in enumerate(items, start=(pagina-1)*10 + 1):
-            emoji = {"comun": "🪨"  , "raro": "💠", "epico": "💎", "legendario": "⚜️", "mitico": "🏆"}.get(item["rareza"], "⚪")
+            emoji = {"comun": "⚪", "raro": "🔵", "epico": "🟣", "legendario": "🟠", "mitico": "🟡"}.get(item["rareza"], "⚪")
             embed.add_field(
                 name=f"{emoji} {item['nombre']}",
                 value=(
+                    #f"**Tipo:** {item['tipo']}\n"
                     f"**Rareza:** {item['rareza'].title()}\n"
                     f"**Valor:** {item['valor']} monedas\n"
                     f"**ID:** `{item['unique_id']}`"
@@ -1938,284 +1751,15 @@ async def inventario(ctx, pagina: int = 1):
         logger.error(f"Error en comando inventario: {e}")
         await ctx.send("❌ Error al ver el inventario")
 
-
-#Transferir
 @bot.command(name='transferir')
-async def transferir(ctx, usuario: discord.Member = None, item_id: str = None):
+async def transferir(ctx, usuario: discord.Member, item_id: str):
     """Transferir item a otro usuario"""
     try:
-        # Verificar parámetros básicos
-        if usuario is None or item_id is None:
-            embed = discord.Embed(
-                title="❌ Uso incorrecto",
-                description="Usa: `!transferir @usuario <item_id>`\n\nEjemplo: `!transferir @amigo abc123`",
-                color=0xe74c3c
-            )
-            await ctx.send(embed=embed)
-            return
-
-        # Verificaciones básicas
         if usuario.id == ctx.author.id:
-            embed = discord.Embed(
-                title="❌ Transferencia inválida",
-                description="No puedes transferir items a ti mismo",
-                color=0xe74c3c
-            )
-            await ctx.send(embed=embed)
-            return
-
-        if usuario.bot:
-            embed = discord.Embed(
-                title="❌ Transferencia inválida",
-                description="No puedes transferir items a bots",
-                color=0xe74c3c
-            )
-            await ctx.send(embed=embed)
-            return
-
-        # Obtener datos del usuario
-        user_data = economy_system.get_user_data(str(ctx.author.id))
-        target_user_data = economy_system.get_user_data(str(usuario.id))
-
-        # Buscar item en inventario
-        item_encontrado = None
-        for item in user_data["inventario"]:
-            if item.get("unique_id") == item_id:
-                item_encontrado = item
-                break
-
-        if not item_encontrado:
-            embed = discord.Embed(
-                title="❌ Item no encontrado",
-                description=f"No tienes ningún item con el ID `{item_id}` en tu inventario",
-                color=0xe74c3c
-            )
-            embed.add_field(
-                name="💡 Consejo",
-                value="Usa `!inventario` para ver tus items y sus IDs",
-                inline=False
-            )
-            await ctx.send(embed=embed)
-            return
-
-        # Verificar espacio en inventario del destinatario
-        if len(target_user_data["inventario"]) >= ECONOMY_CONFIG['max_inventory_size']:
-            embed = discord.Embed(
-                title="❌ Inventario lleno",
-                description=f"El inventario de {usuario.mention} está lleno\nNo puede recibir más items",
-                color=0xe74c3c
-            )
-            embed.add_field(
-                name="Límite actual",
-                value=f"{ECONOMY_CONFIG['max_inventory_size']} items",
-                inline=True
-            )
-            await ctx.send(embed=embed)
-            return
-
-        # Crear embed de confirmación
-        rarity_color = RARITY_SYSTEM[item_encontrado["rareza"]]["color"]
-        embed = discord.Embed(
-            title="🔄 Confirmar Transferencia",
-            description=f"¿Estás seguro de que quieres transferir este item a {usuario.mention}?",
-            color=rarity_color
-        )
-        
-        embed.add_field(
-            name="📦 Item a transferir",
-            value=(
-                f"**Nombre:** {item_encontrado['nombre']}\n"
-                f"**Tipo:** {item_encontrado['tipo'].title()}\n"
-                f"**Rareza:** {item_encontrado['rareza'].title()}\n"
-                f"**Valor:** {item_encontrado['valor']} monedas\n"
-                f"**ID:** `{item_encontrado['unique_id']}`"
-            ),
-            inline=False
-        )
-        
-        embed.add_field(
-            name="👤 Destinatario",
-            value=f"{usuario.mention} ({usuario.display_name})",
-            inline=True
-        )
-        
-        embed.add_field(
-            name="📊 Inventarios",
-            value=(
-                f"**Tu inventario:** {len(user_data['inventario'])}/{ECONOMY_CONFIG['max_inventory_size']} items\n"
-                f"**Inventario destino:** {len(target_user_data['inventario'])}/{ECONOMY_CONFIG['max_inventory_size']} items"
-            ),
-            inline=True
-        )
-        
-        embed.set_footer(text="Esta acción no se puede deshacer")
-
-        # Crear vista con botones de confirmación
-        view = View(timeout=30)
-        
-        async def confirm_callback(interaction):
-            if interaction.user.id != ctx.author.id:
-                await interaction.response.send_message("❌ Esta confirmación no es para ti", ephemeral=True)
-                return
-            
-            # Realizar la transferencia
-            result = await economy_system.transfer_item(str(ctx.author.id), str(usuario.id), item_id)
-            
-            if result is None:
-                await interaction.response.edit_message(
-                    embed=discord.Embed(
-                        title="❌ Error en el sistema",
-                        description="Ocurrió un error al procesar la transferencia",
-                        color=0xe74c3c
-                    ),
-                    view=None
-                )
-                return
-            
-            success, message = result
-            
-            if success:
-                # Obtener datos actualizados
-                user_updated = economy_system.get_user_data(str(ctx.author.id))
-                target_updated = economy_system.get_user_data(str(usuario.id))
-                
-                embed_success = discord.Embed(
-                    title="✅ Transferencia Completada",
-                    description=f"Has transferido exitosamente un item a {usuario.mention}",
-                    color=0x2ecc71
-                )
-                
-                embed_success.add_field(
-                    name="📦 Item transferido",
-                    value=(
-                        f"**{item_encontrado['nombre']}**\n"
-                        f"*{item_encontrado['tipo'].title()} • {item_encontrado['rareza'].title()}*"
-                    ),
-                    inline=False
-                )
-                
-                embed_success.add_field(
-                    name="📊 Inventarios actualizados",
-                    value=(
-                        f"**{ctx.author.display_name}:** {len(user_updated['inventario'])} items\n"
-                        f"**{usuario.display_name}:** {len(target_updated['inventario'])} items"
-                    ),
-                    inline=True
-                )
-                
-                embed_success.add_field(
-                    name="🆔 ID del item",
-                    value=f"`{item_encontrado['unique_id']}`",
-                    inline=True
-                )
-                
-                # Notificar al destinatario si está en el servidor
-                try:
-                    notify_embed = discord.Embed(
-                        title="🎁 ¡Has recibido un item!",
-                        description=f"{ctx.author.mention} te ha transferido un item",
-                        color=rarity_color
-                    )
-                    notify_embed.add_field(
-                        name="📦 Item recibido",
-                        value=(
-                            f"**Nombre:** {item_encontrado['nombre']}\n"
-                            f"**Tipo:** {item_encontrado['tipo'].title()}\n"
-                            f"**Rareza:** {item_encontrado['rareza'].title()}\n"
-                            f"**Valor:** {item_encontrado['valor']} monedas"
-                        ),
-                        inline=False
-                    )
-                    notify_embed.set_footer(text=f"ID: {item_encontrado['unique_id']}")
-                    
-                    await usuario.send(embed=notify_embed)
-                except:
-                    pass  # No se pudo enviar DM, pero la transferencia fue exitosa
-                
-                await interaction.response.edit_message(embed=embed_success, view=None)
-                
-            else:
-                embed_error = discord.Embed(
-                    title="❌ Error en la transferencia",
-                    description=message,
-                    color=0xe74c3c
-                )
-                await interaction.response.edit_message(embed=embed_error, view=None)
-        
-        async def cancel_callback(interaction):
-            if interaction.user.id != ctx.author.id:
-                await interaction.response.send_message("❌ Esta confirmación no es para ti", ephemeral=True)
-                return
-            
-            embed_cancel = discord.Embed(
-                title="❌ Transferencia Cancelada",
-                description="La transferencia ha sido cancelada",
-                color=0x95a5a6
-            )
-            await interaction.response.edit_message(embed=embed_cancel, view=None)
-        
-        async def timeout_callback():
-            try:
-                embed_timeout = discord.Embed(
-                    title="⏰ Tiempo agotado",
-                    description="La confirmación de transferencia ha expirado",
-                    color=0x95a5a6
-                )
-                # Intentar editar el mensaje original
-                message = await ctx.channel.fetch_message(view.message.id)
-                await message.edit(embed=embed_timeout, view=None)
-            except:
-                pass
-        
-        confirm_button = Button(label="✅ Confirmar", style=discord.ButtonStyle.success)
-        cancel_button = Button(label="❌ Cancelar", style=discord.ButtonStyle.danger)
-        
-        confirm_button.callback = confirm_callback
-        cancel_button.callback = cancel_callback
-        
-        view.add_item(confirm_button)
-        view.add_item(cancel_button)
-        view.on_timeout = timeout_callback
-        
-        message = await ctx.send(embed=embed, view=view)
-        view.message = message
-        
-    except Exception as e:
-        logger.error(f"Error en comando transferir: {e}")
-        embed_error = discord.Embed(
-            title="❌ Error en el sistema",
-            description="Ocurrió un error al procesar el comando de transferencia",
-            color=0xe74c3c
-        )
-        embed_error.add_field(
-            name="Uso correcto",
-            value="`!transferir @usuario <item_id>`",
-            inline=False
-        )
-        await ctx.send(embed=embed_error)
-        
-
-#pay
-@bot.command(name='pay')
-async def pay(ctx, usuario: discord.Member, cantidad: int):
-    """Transferir monedas a otro usuario"""
-    try:
-        if usuario.id == ctx.author.id:
-            await ctx.send("❌ No puedes transferir monedas a ti mismo")
+            await ctx.send("❌ No puedes transferir items a ti mismo")
             return
         
-        if cantidad <= 0:
-            await ctx.send("❌ La cantidad debe ser mayor a 0")
-            return
-        
-        # Verificar que el remitente tiene suficiente dinero
-        sender_data = economy_system.get_user_data(str(ctx.author.id))
-        if sender_data["monedas"] < cantidad:
-            await ctx.send(f"❌ No tienes suficientes monedas. Tienes {sender_data['monedas']} monedas")
-            return
-        
-        # Transferir monedas
-        result = await economy_system.transfer_coins(str(ctx.author.id), str(usuario.id), cantidad)
+        result = await economy_system.transfer_item(str(ctx.author.id), str(usuario.id), item_id)
         
         if result is None:
             await ctx.send("❌ Error en el sistema de transferencia")
@@ -2224,468 +1768,46 @@ async def pay(ctx, usuario: discord.Member, cantidad: int):
         success, message = result
         
         if success:
-            # Obtener datos actualizados
-            sender_final = economy_system.get_user_data(str(ctx.author.id))
-            receiver_final = economy_system.get_user_data(str(usuario.id))
-            
             embed = discord.Embed(
-                title="✅ Transferencia Exitosa",
-                description=f"Has transferido {cantidad} monedas a {usuario.mention}",
+                title="✅ Item Transferido",
+                description=f"Has transferido un item a {usuario.mention}",
                 color=0x2ecc71
             )
-            embed.add_field(
-                name="💰 Saldos actualizados",
-                value=(
-                    f"**{ctx.author.display_name}:** {sender_final['monedas']} monedas (-{cantidad})\n"
-                    f"**{usuario.display_name}:** {receiver_final['monedas']} monedas (+{cantidad})"
-                ),
-                inline=False
-            )
-            
             await ctx.send(embed=embed)
         else:
             await ctx.send(message)
             
     except Exception as e:
-        logger.error(f"Error en comando pay: {e}")
-        await ctx.send("❌ Error al transferir monedas")
+        logger.error(f"Error en comando transferir: {e}")
+        await ctx.send("❌ Error al transferir el item")
 
-#venta de artículos
 @bot.command(name='vender')
-async def vender(ctx, mencion: discord.Member = None, item_id: str = None, precio: int = None):
-    """Vender item por monedas o a otro usuario"""
+async def vender(ctx, item_id: str):
+    """Vender item por monedas"""
     try:
-        # Verificar parámetros básicos
-        if item_id is None:
-            await ctx.send("❌ Debes especificar el ID del item. Usa: `!vender [@usuario] <item_id> [precio]`")
-            return
-
-        # Verificar si el usuario ya tiene una venta activa
-        if str(ctx.author.id) in active_sales:
-            await ctx.send("❌ Ya tienes una venta activa. Espera a que termine antes de crear otra.")
-            return
-
-        user_data = economy_system.get_user_data(str(ctx.author.id))
+        result = await economy_system.sell_item(str(ctx.author.id), item_id)
         
-        # Buscar item en inventario
-        item_encontrado = None
-        for item in user_data["inventario"]:
-            if item.get("unique_id") == item_id:
-                item_encontrado = item
-                break
-
-        if not item_encontrado:
-            await ctx.send("❌ Item no encontrado en tu inventario")
+        if result is None:
+            await ctx.send("❌ Error en el sistema de venta")
             return
-
-        valor_real = item_encontrado["valor"]
         
-        # Caso 1: Venta al bot (sin mención o mención al bot)
-        if mencion is None or mencion.id == bot.user.id:
-            if precio is not None:
-                await ctx.send("⚠️ El bot siempre compra los items al 70% de su valor. El precio especificado será ignorado.")
-            
-            valor_venta = int(valor_real * 0.7)
-            result = await economy_system.sell_item(str(ctx.author.id), item_id)
-            
-            if result is None:
-                await ctx.send("❌ Error en el sistema de venta")
-                return
-            
-            success, message = result
-            
-            if success:
-                embed = discord.Embed(
-                    title="🌼 Venta al Sistema",
-                    description=(
-                        f"**Item:** {item_encontrado['nombre']}\n"
-                        f"**Valor original:** {valor_real} monedas\n"
-                        f"**Valor de venta (70%):** {valor_venta} monedas\n\n"
-                        f"{message}\n"
-                        f"**Monedas actuales:** {user_data['monedas']}"
-                    ),
-                    color=0xf39c12
-                )
-                embed.set_footer(text="El sistema compra automáticamente al 70% del valor")
-                await ctx.send(embed=embed)
-            else:
-                await ctx.send(message)
-
-        # Caso 2: Venta a otro usuario específico
-        elif mencion.id != ctx.author.id and mencion.id != bot.user.id:
-            # Verificar que el usuario objetivo existe
-            target_user_data = economy_system.get_user_data(str(mencion.id))
-            
-            # Si no se especifica precio, usar valor real
-            if precio is None:
-                precio = valor_real
-                porcentaje = "100%"
-            else:
-                # Calcular porcentaje del valor real
-                if valor_real > 0:
-                    porcentaje_valor = (precio / valor_real) * 100
-                    porcentaje = f"{porcentaje_valor:.1f}%"
-                else:
-                    porcentaje = "N/A"
-
-            # Crear embed de oferta de venta
+        success, message = result
+        
+        if success:
+            # Obtener datos actualizados
+            user_data = economy_system.get_user_data(str(ctx.author.id))
             embed = discord.Embed(
-                title="💰 Oferta de Venta",
-                description=(
-                    f"{ctx.author.mention} quiere vender un item a {mencion.mention}\n\n"
-                    f"**Item:** {item_encontrado['nombre']}\n"
-                    f"**Tipo:** {item_encontrado['tipo'].title()}\n"
-                    f"**Rareza:** {item_encontrado['rareza'].title()}\n"
-                    f"**Valor de referencia:** {valor_real} monedas\n"
-                    f"**Precio de venta:** {precio} monedas\n"
-                    f"**Esto es el:** {porcentaje} del valor real"
-                ),
-                color=RARITY_SYSTEM[item_encontrado["rareza"]]["color"]
+                title="💰 Item Vendido",
+                description=f"{message}\n\n**Monedas actuales:** {user_data['monedas']}",
+                color=0xf39c12
             )
-            
-            # Configurar timeout fijo (sin contador visual)
-            timeout_seconds = 60
-            embed.set_footer(text=f"ID del item: {item_id} | La oferta expira en 60 segundos")
-
-            # Crear botones para aceptar/rechazar
-            view = View(timeout=timeout_seconds)
-            
-            # Registrar venta activa
-            active_sales[str(ctx.author.id)] = {
-                "item_id": item_id,
-                "message_id": None,
-                "buyer_id": str(mencion.id)
-            }
-            
-            async def accept_callback(interaction):
-                if interaction.user.id != mencion.id:
-                    await interaction.response.send_message("❌ Esta oferta no es para ti", ephemeral=True)
-                    return
-                
-                # Verificar que el comprador tiene suficiente dinero
-                comprador_actual_data = economy_system.get_user_data(str(mencion.id))
-                if comprador_actual_data["monedas"] < precio:
-                    await interaction.response.send_message(
-                        f"❌ No tienes suficientes monedas. Necesitas {precio} monedas pero tienes {comprador_actual_data['monedas']}",
-                        ephemeral=True
-                    )
-                    # Limpiar venta activa
-                    if str(ctx.author.id) in active_sales:
-                        del active_sales[str(ctx.author.id)]
-                    return
-                
-                # Verificar que el vendedor aún tiene el item
-                vendedor_actual_data = economy_system.get_user_data(str(ctx.author.id))
-                item_still_exists = any(item.get("unique_id") == item_id for item in vendedor_actual_data["inventario"])
-                
-                if not item_still_exists:
-                    await interaction.response.send_message("❌ El vendedor ya no tiene este item", ephemeral=True)
-                    # Limpiar venta activa
-                    if str(ctx.author.id) in active_sales:
-                        del active_sales[str(ctx.author.id)]
-                    return
-                
-                # Realizar la transacción
-                success_transfer, msg_transfer = await economy_system.transfer_item(
-                    str(ctx.author.id), str(mencion.id), item_id
-                )
-                
-                if success_transfer:
-                    # Transferir el dinero
-                    await economy_system.remove_coins(str(mencion.id), precio)
-                    await economy_system.add_coins(str(ctx.author.id), precio)
-                    
-                    # Obtener datos actualizados
-                    vendedor_final_data = economy_system.get_user_data(str(ctx.author.id))
-                    comprador_final_data = economy_system.get_user_data(str(mencion.id))
-                    
-                    embed_success = discord.Embed(
-                        title="✅ Venta Completada",
-                        description=(
-                            f"**Item:** {item_encontrado['nombre']}\n"
-                            f"**Precio:** {precio} monedas\n"
-                            f"**Comprador:** {mencion.mention}\n"
-                            f"**Vendedor:** {ctx.author.mention}"
-                        ),
-                        color=0x2ecc71
-                    )
-                    embed_success.add_field(
-                        name="💰 Saldos actualizados",
-                        value=(
-                            f"**{ctx.author.display_name}:** {vendedor_final_data['monedas']} monedas (+{precio})\n"
-                            f"**{mencion.display_name}:** {comprador_final_data['monedas']} monedas (-{precio})"
-                        ),
-                        inline=False
-                    )
-                    
-                    # Deshabilitar los botones y mantener el mensaje original
-                    for item in view.children:
-                        item.disabled = True
-                    
-                    await interaction.response.edit_message(embed=embed_success, view=view)
-                else:
-                    await interaction.response.send_message(f"❌ Error en la transacción: {msg_transfer}", ephemeral=True)
-                
-                # Limpiar venta activa
-                if str(ctx.author.id) in active_sales:
-                    del active_sales[str(ctx.author.id)]
-            
-            async def reject_callback(interaction):
-                if interaction.user.id != mencion.id:
-                    await interaction.response.send_message("❌ Esta oferta no es para ti", ephemeral=True)
-                    return
-                
-                embed_rejected = discord.Embed(
-                    title="❌ Venta Rechazada",
-                    description=f"{mencion.mention} ha rechazado la oferta de compra",
-                    color=0xe74c3c
-                )
-                
-                # Deshabilitar los botones y mantener el mensaje original
-                for item in view.children:
-                    item.disabled = True
-                
-                await interaction.response.edit_message(embed=embed_rejected, view=view)
-                
-                # Limpiar venta activa
-                if str(ctx.author.id) in active_sales:
-                    del active_sales[str(ctx.author.id)]
-            
-            async def timeout_callback():
-                """Callback cuando el tiempo se agota"""
-                # Solo procesar el timeout si la venta sigue activa
-                if str(ctx.author.id) not in active_sales:
-                    return
-                    
-                try:
-                    embed_expired = discord.Embed(
-                        title="⏰ Oferta Expirada",
-                        description="La oferta de venta ha expirado (60 segundos)",
-                        color=0x95a5a6
-                    )
-                    
-                    # Buscar el mensaje original
-                    try:
-                        message_obj = await ctx.channel.fetch_message(active_sales[str(ctx.author.id)]["message_id"])
-                        await message_obj.edit(embed=embed_expired, view=None)
-                    except:
-                        pass  # Si no se puede encontrar el mensaje, ignorar
-                        
-                except Exception as e:
-                    print(f"Error al editar mensaje expirado: {e}")
-                
-                # Limpiar venta activa
-                if str(ctx.author.id) in active_sales:
-                    del active_sales[str(ctx.author.id)]
-            
-            accept_button = Button(label="✅ Aceptar", style=discord.ButtonStyle.success)
-            reject_button = Button(label="❌ Rechazar", style=discord.ButtonStyle.danger)
-            
-            accept_button.callback = accept_callback
-            reject_button.callback = reject_callback
-            
-            view.add_item(accept_button)
-            view.add_item(reject_button)
-            view.on_timeout = timeout_callback
-            
-            message = await ctx.send(embed=embed, view=view)
-            
-            # Actualizar el ID del mensaje en la venta activa
-            active_sales[str(ctx.author.id)]["message_id"] = message.id
-
-        # Caso 3: Venta pública (usando una palabra clave especial)
+            await ctx.send(embed=embed)
         else:
-            await ctx.send("❌ No puedes venderte items a ti mismo. Para venta pública usa: `!vender_publico <item_id> <precio>`")
-
+            await ctx.send(message)
+            
     except Exception as e:
         logger.error(f"Error en comando vender: {e}")
-        # Limpiar venta activa en caso de error
-        if str(ctx.author.id) in active_sales:
-            del active_sales[str(ctx.author.id)]
-        await ctx.send("❌ Error al procesar la venta. Usa: `!vender [@usuario] <item_id> [precio]`")
-
-# Nuevo comando para ventas públicas
-@bot.command(name='vender_publico')
-async def vender_publico(ctx, item_id: str = None, precio: int = None):
-    """Vender un item públicamente a cualquier miembro del servidor"""
-    try:
-        # Verificar parámetros básicos
-        if item_id is None:
-            await ctx.send("❌ Debes especificar el ID del item. Usa: `!vender_publico <item_id> <precio>`")
-            return
-
-        # Verificar si el usuario ya tiene una venta activa
-        if str(ctx.author.id) in active_sales:
-            await ctx.send("❌ Ya tienes una venta activa. Espera a que termine antes de crear otra.")
-            return
-
-        user_data = economy_system.get_user_data(str(ctx.author.id))
-        
-        # Buscar item en inventario
-        item_encontrado = None
-        for item in user_data["inventario"]:
-            if item.get("unique_id") == item_id:
-                item_encontrado = item
-                break
-
-        if not item_encontrado:
-            await ctx.send("❌ Item no encontrado en tu inventario")
-            return
-
-        valor_real = item_encontrado["valor"]
-        
-        # Si no se especifica precio, usar valor real
-        if precio is None:
-            precio = valor_real
-            porcentaje = "100%"
-        else:
-            # Calcular porcentaje del valor real
-            if valor_real > 0:
-                porcentaje_valor = (precio / valor_real) * 100
-                porcentaje = f"{porcentaje_valor:.1f}%"
-            else:
-                porcentaje = "N/A"
-
-        embed = discord.Embed(
-            title="🌍 Venta Pública",
-            description=(
-                f"{ctx.author.mention} está vendiendo un item públicamente\n\n"
-                f"**Item:** {item_encontrado['nombre']}\n"
-                f"**Tipo:** {item_encontrado['tipo'].title()}\n"
-                f"**Rareza:** {item_encontrado['rareza'].title()}\n"
-                f"**Valor de referencia:** {valor_real} monedas\n"
-                f"**Precio de venta:** {precio} monedas\n"
-                f"**Esto es el:** {porcentaje} del valor real"
-            ),
-            color=RARITY_SYSTEM[item_encontrado["rareza"]]["color"]
-        )
-        embed.set_footer(text=f"ID del item: {item_id} | Cualquier miembro puede comprar | Expira en 60 segundos")
-
-        view = View(timeout=60)
-        
-        # Registrar venta activa
-        active_sales[str(ctx.author.id)] = {
-            "item_id": item_id,
-            "message_id": None,
-            "buyer_id": "public",
-            "price": precio
-        }
-        
-        async def public_buy_callback(interaction):
-            buyer_id = str(interaction.user.id)
-            
-            # El vendedor no puede comprar su propio item
-            if buyer_id == str(ctx.author.id):
-                await interaction.response.send_message("❌ No puedes comprar tu propio item", ephemeral=True)
-                return
-            
-            # Verificar que el comprador tiene suficiente dinero
-            buyer_data = economy_system.get_user_data(buyer_id)
-            if buyer_data["monedas"] < precio:
-                await interaction.response.send_message(
-                    f"❌ No tienes suficientes monedas. Necesitas {precio} monedas pero tienes {buyer_data['monedas']}",
-                    ephemeral=True
-                )
-                return
-            
-            # Verificar que el vendedor aún tiene el item
-            seller_data = economy_system.get_user_data(str(ctx.author.id))
-            item_still_exists = any(item.get("unique_id") == item_id for item in seller_data["inventario"])
-            
-            if not item_still_exists:
-                await interaction.response.send_message("❌ El vendedor ya no tiene este item", ephemeral=True)
-                return
-            
-            # Realizar la transacción
-            success_transfer, msg_transfer = await economy_system.transfer_item(
-                str(ctx.author.id), buyer_id, item_id
-            )
-            
-            if success_transfer:
-                # Transferir el dinero
-                await economy_system.remove_coins(buyer_id, precio)
-                await economy_system.add_coins(str(ctx.author.id), precio)
-                
-                # Obtener datos actualizados
-                seller_final = economy_system.get_user_data(str(ctx.author.id))
-                buyer_final = economy_system.get_user_data(buyer_id)
-                
-                embed_success = discord.Embed(
-                    title="✅ Venta Pública Completada",
-                    description=(
-                        f"**Item:** {item_encontrado['nombre']}\n"
-                        f"**Precio:** {precio} monedas\n"
-                        f"**Comprador:** {interaction.user.mention}\n"
-                        f"**Vendedor:** {ctx.author.mention}"
-                    ),
-                    color=0x2ecc71
-                )
-                embed_success.add_field(
-                    name="💰 Saldos actualizados",
-                    value=(
-                        f"**{ctx.author.display_name}:** {seller_final['monedas']} monedas (+{precio})\n"
-                        f"**{interaction.user.display_name}:** {buyer_final['monedas']} monedas (-{precio})"
-                    ),
-                    inline=False
-                )
-                
-                # Deshabilitar el botón
-                for item in view.children:
-                    item.disabled = True
-                
-                await interaction.response.edit_message(embed=embed_success, view=view)
-            else:
-                await interaction.response.send_message(f"❌ Error en la transacción: {msg_transfer}", ephemeral=True)
-            
-            # Limpiar venta activa
-            if str(ctx.author.id) in active_sales:
-                del active_sales[str(ctx.author.id)]
-        
-        async def timeout_callback():
-            """Callback cuando el tiempo se agota"""
-            # Solo procesar el timeout si la venta sigue activa
-            if str(ctx.author.id) not in active_sales:
-                return
-                
-            try:
-                embed_expired = discord.Embed(
-                    title="⏰ Oferta Expirada",
-                    description="La oferta de venta ha expirado (60 segundos)",
-                    color=0x95a5a6
-                )
-                
-                # Buscar el mensaje original
-                try:
-                    message_obj = await ctx.channel.fetch_message(active_sales[str(ctx.author.id)]["message_id"])
-                    await message_obj.edit(embed=embed_expired, view=None)
-                except:
-                    pass  # Si no se puede encontrar el mensaje, ignorar
-                    
-            except Exception as e:
-                print(f"Error al editar mensaje expirado: {e}")
-            
-            # Limpiar venta activa
-            if str(ctx.author.id) in active_sales:
-                del active_sales[str(ctx.author.id)]
-        
-        buy_button = Button(label="💰 Comprar", style=discord.ButtonStyle.success)
-        buy_button.callback = public_buy_callback
-        view.add_item(buy_button)
-        
-        view.on_timeout = timeout_callback
-        
-        message = await ctx.send(embed=embed, view=view)
-        active_sales[str(ctx.author.id)]["message_id"] = message.id
-        
-    except Exception as e:
-        logger.error(f"Error en comando vender_publico: {e}")
-        # Limpiar venta activa en caso de error
-        if str(ctx.author.id) in active_sales:
-            del active_sales[str(ctx.author.id)]
-        await ctx.send("❌ Error al procesar la venta pública. Usa: `!vender_publico <item_id> <precio>`")
-        
-#regalo diario
-
+        await ctx.send("❌ Error al vender el item")
 
 @bot.command(name='diario')
 async def diario(ctx):
@@ -2702,9 +1824,13 @@ async def diario(ctx):
         if success:
             user_data = economy_system.get_user_data(str(ctx.author.id))
             embed = discord.Embed(
-                title="📅 Recompensa Diaria",
-                description=f"{message}\n\n**Monedas actuales:** {user_data['monedas']}",
-                color=0xf39c12
+                title="🎁 Recompensa Diaria",
+                description=(
+                    f"{message}\n\n"
+                    f"**Monedas totales:** {user_data['monedas']}\n\n"
+                    "¡Vuelve mañana por más!"
+                ),
+                color=0xffd700
             )
             await ctx.send(embed=embed)
         else:
@@ -2712,52 +1838,113 @@ async def diario(ctx):
             
     except Exception as e:
         logger.error(f"Error en comando diario: {e}")
-        await ctx.send("❌ Error al reclamar la recompensa diaria")
+        await ctx.send("❌ Error al reclamar recompensa diaria")
 
-# Comando para cancelar ventas activas
-@bot.command(name='cancelar_venta')
-async def cancelar_venta(ctx):
-    """Cancelar tu venta activa"""
+@bot.command(name='perfil')
+async def perfil(ctx, usuario: discord.Member = None):
+    """Ver perfil económico de un usuario"""
     try:
-        if str(ctx.author.id) not in active_sales:
-            await ctx.send("❌ No tienes ninguna venta activa para cancelar")
-            return
+        if usuario is None:
+            usuario = ctx.author
         
-        # Obtener información de la venta activa
-        sale_info = active_sales[str(ctx.author.id)]
+        user_data = economy_system.get_user_data(str(usuario.id))
         
-        # Eliminar la venta activa
-        del active_sales[str(ctx.author.id)]
+        # Calcular estadísticas
+        total_items = len(user_data["inventario"])
+        personajes_unicos = len(set(user_data["personajes_obtenidos"]))
+        total_gachas = user_data.get("total_gachas", 0)
         
-        await ctx.send("✅ Venta activa cancelada exitosamente")
+        # Calcular distribución de rarezas
+        rarity_dist = {}
+        for item in user_data["inventario"]:
+            rareza = item["rareza"]
+            rarity_dist[rareza] = rarity_dist.get(rareza, 0) + 1
+        
+        embed = discord.Embed(
+            title=f"📊 Perfil Económico - {usuario.display_name}",
+            color=0x9b59b6
+        )
+        
+        embed.add_field(
+            name="💵 Economía",
+            value=(
+                f"**Monedas:** {user_data['monedas']}\n"
+                f"**Total Gachas:** {total_gachas}\n"
+                f"**Personajes Únicos:** {personajes_unicos}"
+            ),
+            inline=True
+        )
+        
+        embed.add_field(
+            name="🎒 Inventario", 
+            value=(
+                f"**Items Totales:** {total_items}\n"
+                f"**Espacio Libre:** {ECONOMY_CONFIG['max_inventory_size'] - total_items}\n"
+                f"**Capacidad:** {ECONOMY_CONFIG['max_inventory_size']}"
+            ),
+            inline=True
+        )
+        
+        # Añadir distribución de rarezas
+        if rarity_dist:
+            rarity_text = "\n".join([
+                f"**{rareza.title()}:** {count}"
+                for rareza, count in sorted(rarity_dist.items(), 
+                                          key=lambda x: RARITY_SYSTEM[x[0]]["prob"])
+            ])
+            embed.add_field(name="📈 Rarezas", value=rarity_text, inline=True)
+        
+        embed.set_thumbnail(url=usuario.display_avatar.url)
+        
+        await ctx.send(embed=embed)
         
     except Exception as e:
-        logger.error(f"Error en comando cancelar_venta: {e}")
-        await ctx.send("❌ Error al cancelar la venta activa")
+        logger.error(f"Error en comando perfil: {e}")
+        await ctx.send("❌ Error al ver el perfil")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+@bot.command(name='economia')
+async def economia(ctx):
+    """Información del sistema económico"""
+    embed = discord.Embed(
+        title="💎 Sistema Económico - Guía",
+        description="Todos los comandos disponibles para el sistema económico:",
+        color=0x00ff88
+    )
+    
+    embed.add_field(
+        name="🎰 Gacha System",
+        value=(
+            "`!gacha` - Usar el sistema gacha (50 monedas)\n"
+            "`!diario` - Reclamar recompensa diaria (100 monedas)\n"
+            "`!perfil` - Ver tu perfil económico"
+        ),
+        inline=False
+    )
+    
+    embed.add_field(
+        name="🎒 Gestión de Items",
+        value=(
+            "`!inventario [página]` - Ver tu inventario\n"
+            "`!vender <item_id>` - Vender un item\n"
+            "`!transferir @usuario <item_id>` - Transferir item"
+        ),
+        inline=False
+    )
+    
+    embed.add_field(
+        name="📊 Estadísticas",
+        value=(
+            f"**Monedas iniciales:** {ECONOMY_CONFIG['starting_coins']}\n"
+            f"**Costo gacha:** {ECONOMY_CONFIG['gacha_cost']} monedas\n"
+            f"**Recompensa diaria:** {ECONOMY_CONFIG['daily_coins']} monedas\n"
+            f"**Capacidad inventario:** {ECONOMY_CONFIG['max_inventory_size']} items"
+        ),
+        inline=False
+    )
+    
+    embed.set_footer(text="¡Diviértete coleccionando!")
+    
+    await ctx.send(embed=embed)
 
 
 
