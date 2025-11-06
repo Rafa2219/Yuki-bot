@@ -237,7 +237,7 @@
 			"nombre": "Yamato",
 			"serie": "One Piece",
 			"rareza": "legendario",
-			"image_url": "",
+			"image_url": "https://cdnb.artstation.com/p/assets/images/images/055/828/215/large/christopher-susanto-yamatowo-min.jpg?1667845230",
 			"descripcion": "Hijo de Kaido que idolatra a Oden Kozuki. Comió una Fruta del Diablo Zoan Mítica, modelo Okuchi no Makami."
 		},
 		{
@@ -289,12 +289,12 @@
 			"descripcion": "Capitana de los Piratas de Bonney y parte de la 'Peor Generación'. Su Fruta del Diablo le permite manipular edades."
 		},
 		{
-			"id": "big_mom_001",
-			"nombre": "Big Mom (Charlotte Linlin)",
-			"serie": "One Piece",
+			"id": "tsukuyomi_tsukasa",
+			"nombre": "Tsukuyomi Tsukasa",
+			"serie": "TONIKAWA",
 			"rareza": "mitico",
-			"image_url": "",
-			"descripcion": "Una de los Cuatro Emperadores (Yonko). Comió la Fruta Soru Soru, que le permite manipular almas."
+			"image_url": "https://mblogthumb-phinf.pstatic.net/MjAyMTA1MDJfMjg1/MDAxNjE5OTY2NDAzMDAx.o2034ct67uTgHn1yAFJprLmURa_VMrpWIYXNoSxDM88g.v2ePSVeyxnY4rfeizFjYTrtxz-gevjh3yl9izhlPqqgg.JPEG.kailian/Internet%EF%BC%BF20210502%EF%BC%BF233937%EF%BC%BF8.jpeg?type=w800",
+			"descripcion": "Tsukasa Tsukuyomi es una mujer hermosa, con cabello largo y rosa, ojos rojos y que suele vestir ropa elegante.\n Tiene una fuerza sobrehumana y ha vivido muchisimos años."
 		},
 		{
 			"id": "ulti_001",
@@ -573,7 +573,7 @@
 			"nombre": "Felt",
 			"serie": "Re:Zero",
 			"rareza": "comun",
-			"image_url": "",
+			"image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTzQ5GzqO2_0lJBLD-omT2I7lN-rWIG520DZxokjMK2eg&s=10",
 			"descripcion": "Una joven ladrona de los barrios bajos que es revelada como una candidata al trono real."
 		},
 		{
@@ -917,12 +917,12 @@
 			"nombre": "Yuri Honjo",
 			"serie": "Tenkuu Shinpan",
 			"rareza": "raro",
-			"image_url": "",
+			"image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYDQWS7rHjBsXQtcW8hnHnCYXGiLyJuywrzw&usqp=CAU",
 			"descripcion": "Una estudiante atrapada en un mundo de rascacielos interconectados, perseguida por asesinos enmascarados."
 		},
 		{
 			"id": "tsukasa_001",
-			"nombre": "Tsukasa Yuzaki",
+			"nombre": "Tsukasa Yuzaki (seifuku)",
 			"serie": "Tonikaku Kawaii",
 			"rareza": "comun",
 			"image_url": "",
