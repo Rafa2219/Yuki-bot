@@ -1,0 +1,1012 @@
+{
+	"personajes": [
+		{
+			"id": "nobara_001",
+			"nombre": "Nobara Kugisaki",
+			"serie": "Jujutsu Kaisen",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Hechicera jujutsu segura de sí misma que utiliza un martillo y clavos como armas malditas."
+		},
+		{
+			"id": "maki_001",
+			"nombre": "Maki Zenin",
+			"serie": "Jujutsu Kaisen",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "Rechazada por su clan por nacer sin energía maldita, lucha con una fuerza física y un manejo de armas sobrehumanos."
+		},
+		{
+			"id": "kasumi_001",
+			"nombre": "Kasumi Miwa",
+			"serie": "Jujutsu Kaisen",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "Una hechicera amable y trabajadora de la escuela de Kioto, conocida por su técnica de 'Nuevo Estilo de Sombra'."
+		},
+		{
+			"id": "shoko_001",
+			"nombre": "Shoko Ieiri",
+			"serie": "Jujutsu Kaisen",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "La doctora de la Escuela de Hechicería de Tokio y una de las pocas usuarias de la Técnica de Maldición Inversa para curar."
+		},
+		{
+			"id": "mei_mei_001",
+			"nombre": "Mei Mei",
+			"serie": "Jujutsu Kaisen",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "Una hechicera de Grado 1 que lucha por dinero, utilizando un hacha de batalla gigante y controlando cuervos."
+		},
+		{
+			"id": "utahime_001",
+			"nombre": "Utahime Iori",
+			"serie": "Jujutsu Kaisen",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "La supervisora y maestra en la escuela de Kioto, a menudo exasperada por Gojo."
+		},
+		{
+			"id": "rika_001",
+			"nombre": "Rika Orimoto",
+			"serie": "Jujutsu Kaisen 0",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "Conocida como la 'Reina de las Maldiciones', es el espíritu maldito de Grado Especial vinculado a Yuta Okkotsu."
+		},
+		{
+			"id": "nezuko_001",
+			"nombre": "Nezuko Kamado",
+			"serie": "Demon Slayer",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "La hermana menor de Tanjiro, convertida en demonio, que lucha por proteger a los humanos."
+		},
+		{
+			"id": "shinobu_001",
+			"nombre": "Shinobu Kocho",
+			"serie": "Demon Slayer",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "La Pilar del Insecto. Compensa su falta de fuerza física con velocidad y un veneno mortal a base de glicina."
+		},
+		{
+			"id": "mitsuri_001",
+			"nombre": "Mitsuri Kanroji",
+			"serie": "Demon Slayer",
+			"rareza": "epico",
+			"image_url": "https://i.pinimg.com/736x/d7/2f/85/d72f85486a365856fd0c69dcb94a61f0.jpg",
+			"descripcion": "La Pilar del Amor. Posee una flexibilidad y fuerza sobrehumanas, y maneja una espada similar a un látigo."
+		},
+		{
+			"id": "kanao_001",
+			"nombre": "Kanao Tsuyuri",
+			"serie": "Demon Slayer",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "La Tsuguko de Shinobu Kocho. Una luchadora prodigio que depende de una moneda para tomar decisiones."
+		},
+		{
+			"id": "aoi_001",
+			"nombre": "Aoi Kanzaki",
+			"serie": "Demon Slayer",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "Una Cazadora de Demonios que, aunque pasó la selección, trabaja en la Finca Mariposa cuidando a los heridos."
+		},
+		{
+			"id": "daki_001",
+			"nombre": "Daki",
+			"serie": "Demon Slayer",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "Una de las Lunas Superiores, comparte el rango con su hermano Gyutaro. Controla fajas (obis) afiladas."
+		},
+		{
+			"id": "tamayo_001",
+			"nombre": "Tamayo",
+			"serie": "Demon Slayer",
+			"rareza": "raro",
+			"image_url": "https://i.pinimg.com/736x/08/a6/d3/08a6d3d2f294d3c7683544ffddf11f4d.jpg",
+			"descripcion": "Una demonio doctora que busca una cura y se opone a Muzan. Desarrolló su propio Arte de Demonio de Sangre."
+		},
+		{
+			"id": "ochaco_001",
+			"nombre": "Ochaco Uraraka",
+			"serie": "My Hero Academia",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "Estudiante de la Clase 1-A con el Don 'Gravedad Cero', que le permite hacer flotar objetos y personas."
+		},
+		{
+			"id": "tsuyu_001",
+			"nombre": "Tsuyu Asui",
+			"serie": "My Hero Academia",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "Estudiante de la Clase 1-A con el Don 'Rana', dándole habilidades como una lengua larga, agilidad y camuflaje."
+		},
+		{
+			"id": "momo_y_001",
+			"nombre": "Momo Yaoyorozu",
+			"serie": "My Hero Academia",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "La vicepresidenta de la Clase 1-A, con el Don 'Creación', que le permite crear cualquier objeto no viviente."
+		},
+		{
+			"id": "kyoka_001",
+			"nombre": "Kyoka Jiro",
+			"serie": "My Hero Academia",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Estudiante de la Clase 1-A con el Don 'Earphone Jack', que le permite canalizar vibraciones y escuchar sonidos."
+		},
+		{
+			"id": "mina_001",
+			"nombre": "Mina Ashido",
+			"serie": "My Hero Academia",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "Estudiante de la Clase 1-A con el Don 'Ácido', que le permite secretar un fluido corrosivo."
+		},
+		{
+			"id": "toga_001",
+			"nombre": "Himiko Toga",
+			"serie": "My Hero Academia",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "Miembro de la Liga de Villanos con el Don 'Transformar', que le permite tomar la apariencia de otros al ingerir su sangre."
+		},
+		{
+			"id": "mirko_001",
+			"nombre": "Mirko (Rumi Usagiyama)",
+			"serie": "My Hero Academia",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "La Heroína Profesional No. 5. Su Don 'Conejo' le da una fuerza de piernas increíble y gran agilidad."
+		},
+		{
+			"id": "mt_lady_001",
+			"nombre": "Mt. Lady (Yu Takeyama)",
+			"serie": "My Hero Academia",
+			"rareza": "raro",
+			"image_url": "https://static.wikia.nocookie.net/bokunoheroacademia/images/9/98/Yu_Takeyama_Anime_Action.png/revision/latest?cb=20240615232532",
+			"descripcion": "Una Heroína Profesional cuyo Don 'Gigantificación' le permite crecer a un tamaño enorme."
+		},
+		{
+			"id": "midnight_001",
+			"nombre": "Midnight (Nemuri Kayama)",
+			"serie": "My Hero Academia",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "La 'Heroína +18'. Su Don 'Aroma de Sueño' libera un incienso que duerme a sus oponentes."
+		},
+		{
+			"id": "nana_001",
+			"nombre": "Nana Shimura",
+			"serie": "My Hero Academia",
+			"rareza": "legendario",
+			"image_url": "",
+			"descripcion": "La séptima portadora del 'One For All' y la mentora de All Might. Tenía el Don 'Flotar'."
+		},
+		{
+			"id": "eri_001",
+			"nombre": "Eri",
+			"serie": "My Hero Academia",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una niña rescatada con el Don 'Rebobinar', que le permite revertir a un ser vivo a un estado anterior."
+		},
+		{
+			"id": "nami_001",
+			"nombre": "Nami",
+			"serie": "One Piece",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "La navegante de los Piratas del Sombrero de Paja. Experta en meteorología y cartografía, lucha con el Clima-Takt."
+		},
+		{
+			"id": "robin_001",
+			"nombre": "Nico Robin",
+			"serie": "One Piece",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "La arqueóloga de los Piratas del Sombrero de Paja. Comió la Fruta Hana Hana, que le permite replicar partes de su cuerpo."
+		},
+		{
+			"id": "boa_001",
+			"nombre": "Boa Hancock",
+			"serie": "One Piece",
+			"rareza": "legendario",
+			"image_url": "",
+			"descripcion": "La 'Emperatriz Pirata' y Shichibukai. Comió la Fruta Mero Mero, que petrifica a quienes sienten lujuria por ella."
+		},
+		{
+			"id": "vivi_001",
+			"nombre": "Vivi Nefertari",
+			"serie": "One Piece",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "La princesa del Reino de Arabasta y miembro honorario de los Piratas del Sombrero de Paja."
+		},
+		{
+			"id": "yamato_001",
+			"nombre": "Yamato",
+			"serie": "One Piece",
+			"rareza": "legendario",
+			"image_url": "",
+			"descripcion": "Hijo de Kaido que idolatra a Oden Kozuki. Comió una Fruta del Diablo Zoan Mítica, modelo Okuchi no Makami."
+		},
+		{
+			"id": "perona_001",
+			"nombre": "Perona",
+			"serie": "One Piece",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "La 'Princesa Fantasma'. Comió la Fruta Horo Horo, que le permite crear fantasmas que inducen negatividad."
+		},
+		{
+			"id": "tashigi_001",
+			"nombre": "Tashigi",
+			"serie": "One Piece",
+			"rareza": "comun",
+			"image_url": "https://ih1.redbubble.net/image.4121431939.6945/raf,360x360,075,t,fafafa:ca443f4786.jpg",
+			"descripcion": "Una oficial de la Marina bajo el mando de Smoker. Una espadachina experta que se parece asombrosamente a la amiga de la infancia de Zoro."
+		},
+		{
+			"id": "rebecca_001",
+			"nombre": "Rebecca",
+			"serie": "One Piece",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "La princesa de Dressrosa y una gladiadora que luchó en el Coliseo Corrida."
+		},
+		{
+			"id": "carrot_001",
+			"nombre": "Carrot",
+			"serie": "One Piece",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una miembro de la tribu Mink y parte de los 'Mosqueteros'. Puede transformarse en su forma 'Sulong' bajo la luna llena."
+		},
+		{
+			"id": "hiyori_001",
+			"nombre": "Kozuki Hiyori",
+			"serie": "One Piece",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "La hija de Oden Kozuki y hermana de Momonosuke. Se ocultó bajo la identidad de la cortesana Komurasaki."
+		},
+		{
+			"id": "bonney_001",
+			"nombre": "Jewelry Bonney",
+			"serie": "One Piece",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "Capitana de los Piratas de Bonney y parte de la 'Peor Generación'. Su Fruta del Diablo le permite manipular edades."
+		},
+		{
+			"id": "big_mom_001",
+			"nombre": "Big Mom (Charlotte Linlin)",
+			"serie": "One Piece",
+			"rareza": "mitico",
+			"image_url": "",
+			"descripcion": "Una de los Cuatro Emperadores (Yonko). Comió la Fruta Soru Soru, que le permite manipular almas."
+		},
+		{
+			"id": "ulti_001",
+			"nombre": "Ulti",
+			"serie": "One Piece",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Miembro del Tobi Roppo de los Piratas de las Bestias. Comió una Fruta del Diablo Zoan Ancestral, modelo Pachycephalosaurus."
+		},
+		{
+			"id": "sakura_001",
+			"nombre": "Sakura Haruno",
+			"serie": "Naruto",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Miembro del Equipo 7. Una kunoichi inteligente que se especializa en ninjutsu médico y fuerza sobrehumana."
+		},
+		{
+			"id": "hinata_001",
+			"nombre": "Hinata Hyuga",
+			"serie": "Naruto",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Miembro del clan Hyuga y usuaria del Byakugan. Conocida por su 'Puño Suave' y su amable determinación."
+		},
+		{
+			"id": "ino_001",
+			"nombre": "Ino Yamanaka",
+			"serie": "Naruto",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "Miembro del Equipo 10 y del clan Yamanaka. Se especializa en técnicas de transferencia de mente."
+		},
+		{
+			"id": "tenten_001",
+			"nombre": "Tenten",
+			"serie": "Naruto",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "Miembro del Equipo Guy. Se especializa en el uso de armas ninja, que invoca desde pergaminos."
+		},
+		{
+			"id": "temari_001",
+			"nombre": "Temari",
+			"serie": "Naruto",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una kunoichi de la Aldea Oculta de la Arena. Lucha usando un abanico gigante para crear potentes ataques de viento."
+		},
+		{
+			"id": "tsunade_001",
+			"nombre": "Tsunade",
+			"serie": "Naruto",
+			"rareza": "legendario",
+			"image_url": "https://i.pinimg.com/474x/6d/e0/dc/6de0dc6db150dd5ea8aea4378eabbbff.jpg",
+			"descripcion": "Una de los 'Tres Sannin Legendarios', la Quinta Hokage y la mejor ninja médico del mundo."
+		},
+		{
+			"id": "kushina_001",
+			"nombre": "Kushina Uzumaki",
+			"serie": "Naruto",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "La madre de Naruto Uzumaki y la anterior Jinchuriki del Zorro de Nueve Colas. Famosa por sus Cadenas de Chakra."
+		},
+		{
+			"id": "mei_t_001",
+			"nombre": "Mei Terumi",
+			"serie": "Naruto",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "La Quinta Mizukage. La única persona conocida que posee dos Kekkei Genkai elementales: Vapor y Lava."
+		},
+		{
+			"id": "konan_001",
+			"nombre": "Konan",
+			"serie": "Naruto",
+			"rareza": "epico",
+			"image_url": "https://i.pinimg.com/564x/4e/bd/7f/4ebd7f0958ec0b41d9c87a90f6c78617.jpg",
+			"descripcion": "El único miembro femenino de Akatsuki y la mano derecha de Pain. Utiliza ninjutsu a base de papel."
+		},
+		{
+			"id": "kaguya_001",
+			"nombre": "Kaguya Otsutsuki",
+			"serie": "Naruto",
+			"rareza": "mitico",
+			"image_url": "",
+			"descripcion": "La 'Princesa Conejo', el ser que originó el chakra en la Tierra y la antagonista final de la serie."
+		},
+		{
+			"id": "sarada_001",
+			"nombre": "Sarada Uchiha",
+			"serie": "Boruto",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "La hija de Sasuke Uchiha y Sakura Haruno. Heredó el Sharingan y la fuerza de su madre."
+		},
+		{
+			"id": "rukia_001",
+			"nombre": "Rukia Kuchiki",
+			"serie": "Bleach",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "La Shinigami que le dio sus poderes a Ichigo. Su Zanpakuto, Sode no Shirayuki, es considerada la más bella de tipo hielo."
+		},
+		{
+			"id": "orihime_001",
+			"nombre": "Orihime Inoue",
+			"serie": "Bleach",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Amiga de Ichigo. Su poder, el 'Shun Shun Rikka', le permite rechazar fenómenos, curando o creando escudos."
+		},
+		{
+			"id": "yoruichi_001",
+			"nombre": "Yoruichi Shihoin",
+			"serie": "Bleach",
+			"rareza": "legendario",
+			"image_url": "",
+			"descripcion": "Ex-capitana de la 2ª División y ex-comandante del Onmitsukido. Maestra del Shunpo (Paso Rápido) y puede transformarse en gato."
+		},
+		{
+			"id": "rangiku_001",
+			"nombre": "Rangiku Matsumoto",
+			"serie": "Bleach",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "La Teniente de la 10ª División. Su Zanpakuto, Haineko, disuelve la hoja en una nube de ceniza cortante."
+		},
+		{
+			"id": "soi_fon_001",
+			"nombre": "Soi Fon",
+			"serie": "Bleach",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "La Capitana de la 2ª División y comandante del Onmitsukido. Su Shikai 'Nigeki Kessatsu' mata en dos golpes."
+		},
+		{
+			"id": "nel_001",
+			"nombre": "Nelliel Tu Odelschwanck",
+			"serie": "Bleach",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "Una Arrancar infantil y pacífica que es, en realidad, la antigua 3ª Espada. Su Resurrección es 'Gamuza'."
+		},
+		{
+			"id": "harribel_001",
+			"nombre": "Tier Harribel",
+			"serie": "Bleach",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "La 3ª Espada en el ejército de Aizen. Su Resurrección, 'Tiburón', le permite controlar el agua."
+		},
+		{
+			"id": "unohana_001",
+			"nombre": "Retsu Unohana",
+			"serie": "Bleach",
+			"rareza": "legendario",
+			"image_url": "",
+			"descripcion": "La Capitana de la 4ª División, especializada en curación. Originalmente fue la primera 'Kenpachi', la criminal más despiadada."
+		},
+		{
+			"id": "senjumaru_001",
+			"nombre": "Senjumaru Shutara",
+			"serie": "Bleach",
+			"rareza": "legendario",
+			"image_url": "",
+			"descripcion": "Miembro de la Guardia Real (División Cero). Conocida como la 'Gran Tejedora', crea y manipula tela y agujas."
+		},
+		{
+			"id": "bulma_001",
+			"nombre": "Bulma",
+			"serie": "Dragon Ball",
+			"rareza": "legendario",
+			"image_url": "",
+			"descripcion": "Una inventora de nivel genio, fundadora de Capsule Corp y la primera amiga de Goku en su búsqueda de las Esferas del Dragón."
+		},
+		{
+			"id": "chi_chi_001",
+			"nombre": "Chi-Chi (Milk)",
+			"serie": "Dragon Ball",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "La princesa del Monte Frypan, esposa de Goku y madre de Gohan y Goten. Una luchadora formidable en su juventud."
+		},
+		{
+			"id": "android_18_001",
+			"nombre": "Androide 18",
+			"serie": "Dragon Ball",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "Un cíborg creado por el Dr. Gero. Originalmente una villana, se convierte en una de las luchadoras más fuertes y esposa de Krilin."
+		},
+		{
+			"id": "videl_001",
+			"nombre": "Videl",
+			"serie": "Dragon Ball",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "La hija de Mr. Satan. Una luchadora de artes marciales que aprende a volar y se casa con Gohan."
+		},
+		{
+			"id": "pan_001",
+			"nombre": "Pan",
+			"serie": "Dragon Ball",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "La hija de Gohan y Videl, y nieta de Goku. Muestra un potencial de lucha inmenso desde una edad temprana."
+		},
+		{
+			"id": "caulifla_001",
+			"nombre": "Caulifla",
+			"serie": "Dragon Ball Super",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una Saiyan del Universo 6, líder de una banda de delincuentes. La primera mujer Super Saiyan (canónica)."
+		},
+		{
+			"id": "kale_001",
+			"nombre": "Kale",
+			"serie": "Dragon Ball Super",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una Saiyan del Universo 6, protegida de Caulifla. Posee una forma 'Berserker' similar a la de Broly."
+		},
+		{
+			"id": "kefla_001",
+			"nombre": "Kefla",
+			"serie": "Dragon Ball Super",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "La fusión Potara de Caulifla y Kale, una de las guerreras más poderosas del Torneo de Poder."
+		},
+		{
+			"id": "mai_001",
+			"nombre": "Mai",
+			"serie": "Dragon Ball",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "Originalmente una secuaz de Pilaf. Debido a un deseo, es rejuvenecida y se convierte en una aliada cercana de Trunks del Futuro."
+		},
+		{
+			"id": "emilia_001",
+			"nombre": "Emilia",
+			"serie": "Re:Zero",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "Una medio elfa de cabello plateado que aspira a ser la próxima reina de Lugunica, acompañada por el espíritu Pack."
+		},
+		{
+			"id": "rem_001",
+			"nombre": "Rem",
+			"serie": "Re:Zero",
+			"rareza": "legendario",
+			"image_url": "",
+			"descripcion": "Una de las sirvientas gemelas demonio en la mansión Roswaal, ferozmente leal a Subaru."
+		},
+		{
+			"id": "ram_001",
+			"nombre": "Ram",
+			"serie": "Re:Zero",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "La hermana gemela de Rem. Aunque perdió su cuerno, sigue siendo una sirvienta sarcástica y capaz."
+		},
+		{
+			"id": "beatrice_001",
+			"nombre": "Beatrice",
+			"serie": "Re:Zero",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "La guardiana de la biblioteca de la mansión Roswaal. Un espíritu artificial que finalmente forma contrato con Subaru."
+		},
+		{
+			"id": "felt_001",
+			"nombre": "Felt",
+			"serie": "Re:Zero",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "Una joven ladrona de los barrios bajos que es revelada como una candidata al trono real."
+		},
+		{
+			"id": "echidna_001",
+			"nombre": "Echidna",
+			"serie": "Re:Zero",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "La Bruja de la Avaricia. Su insaciable sed de conocimiento la lleva a interactuar con Subaru en su mundo de sueños."
+		},
+		{
+			"id": "satella_001",
+			"nombre": "Satella",
+			"serie": "Re:Zero",
+			"rareza": "mitico",
+			"image_url": "",
+			"descripcion": "La temida 'Bruja de la Envidia', responsable de la habilidad 'Regreso por Muerte' de Subaru y físicamente idéntica a Emilia."
+		},
+		{
+			"id": "roxy_001",
+			"nombre": "Roxy Migurdia",
+			"serie": "Mushoku Tensei",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "Una maga talentosa de la tribu Migurdia y la antigua tutora de Rudeus, especializada en magia de agua."
+		},
+		{
+			"id": "eris_001",
+			"nombre": "Eris Boreas Greyrat",
+			"serie": "Mushoku Tensei",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una noble pelirroja y de temperamento fuerte que aprende esgrima y magia con Rudeus."
+		},
+		{
+			"id": "sylphiette_001",
+			"nombre": "Sylphiette",
+			"serie": "Mushoku Tensei",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "La amiga de la infancia de Rudeus, una mestiza de elfo y bestia. Se especializa en magia silenciosa."
+		},
+		{
+			"id": "ghislaine_001",
+			"nombre": "Ghislaine Dedoldia",
+			"serie": "Mushoku Tensei",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una 'Beastfolk' y maestra espadachina de la familia Boreas Greyrat, conocida como 'Rey de la Espada'."
+		},
+		{
+			"id": "lilia_001",
+			"nombre": "Lilia Greyrat",
+			"serie": "Mushoku Tensei",
+			"rareza": "comun",
+			"image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQbLAyp9CPkAQuMnhuPw1wl4sMgldP6LuyxwJgjizXhXMKayLOQsCSqjB4&s=10",
+			"descripcion": "La sirvienta principal de la casa Greyrat y la madre de la medio hermana de Rudeus, Aisha."
+		},
+		{
+			"id": "tohru_001",
+			"nombre": "Tohru",
+			"serie": "Kobayashi san Chi no Maid Dragon",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una poderosa dragona del caos que se enamora de Kobayashi y se convierte en su sirvienta."
+		},
+		{
+			"id": "kanna_001",
+			"nombre": "Kanna Kamui",
+			"serie": "Kobayashi san Chi no Maid Dragon",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "Una joven dragona de la facción del Caos, exiliada y acogida por Kobayashi. Le encanta la atención."
+		},
+		{
+			"id": "elma_001",
+			"nombre": "Elma",
+			"serie": "Kobayashi san Chi no Maid Dragon",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una dragona de la facción de la Armonía y rival de Tohru. Se obsesiona con la comida humana."
+		},
+		{
+			"id": "lucoa_001",
+			"nombre": "Lucoa (Quetzalcoatl)",
+			"serie": "Kobayashi san Chi no Maid Dragon",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una ex-diosa dragón y amiga de Tohru, conocida por su apariencia voluptuosa y su actitud relajada."
+		},
+		{
+			"id": "ilulu_001",
+			"nombre": "Ilulu",
+			"serie": "Kobayashi san Chi no Maid Dragon",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una dragona de la facción del Caos que inicialmente ataca a Tohru, pero termina viviendo con ella."
+		},
+		{
+			"id": "chisato_001",
+			"nombre": "Chisato Nishikigi",
+			"serie": "Lycoris Recoil",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "Una agente 'Lycoris' de élite, conocida por su increíble habilidad para esquivar balas y su personalidad alegre."
+		},
+		{
+			"id": "takina_001",
+			"nombre": "Takina Inoue",
+			"serie": "Lycoris Recoil",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una agente 'Lycoris' seria y disciplinada que es transferida y se convierte en la compañera de Chisato."
+		},
+		{
+			"id": "mizuki_n_001",
+			"nombre": "Mizuki Nakahara",
+			"serie": "Lycoris Recoil",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "Ex-miembro de la agencia de inteligencia de DA, trabaja en el Café LycoReco y está desesperada por casarse."
+		},
+		{
+			"id": "kurumi_001",
+			"nombre": "Kurumi",
+			"serie": "Lycoris Recoil",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "Una hacker de élite conocida como 'Walnut' que se esconde en el Café LycoReco bajo la apariencia de una niña."
+		},
+		{
+			"id": "zero_two_001",
+			"nombre": "Zero Two",
+			"serie": "Darling in the Franxx",
+			"rareza": "legendario",
+			"image_url": "",
+			"descripcion": "Una piloto de élite con sangre de klaxosaurio, conocida por su apodo 'Asesina de Compañeros' y sus cuernos rojos."
+		},
+		{
+			"id": "ichigo_001",
+			"nombre": "Ichigo",
+			"serie": "Darling in the Franxx",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "La líder del Escuadrón 13 y la amiga de la infancia de Hiro, que alberga sentimientos profundos por él."
+		},
+		{
+			"id": "kokoro_001",
+			"nombre": "Kokoro",
+			"serie": "Darling in the Franxx",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "Una piloto amable y gentil del Escuadrón 13 que desarrolla un interés maternal por la procreación."
+		},
+		{
+			"id": "miku_001",
+			"nombre": "Miku",
+			"serie": "Darling in the Franxx",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "Una piloto testaruda y alegre del Escuadrón 13, a menudo en desacuerdo con su compañero Zorome."
+		},
+		{
+			"id": "ikuno_001",
+			"nombre": "Ikuno",
+			"serie": "Darling in the Franxx",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "Una piloto callada e intelectual del Escuadrón 13, que lucha con sus sentimientos y su compatibilidad."
+		},
+		{
+			"id": "yuzuriha_001",
+			"nombre": "Yuzuriha Ogawa",
+			"serie": "Dr. Stone",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "Amiga de la infancia de Taiju y Senku, conocida por su habilidad en la artesanía y la costura en el Reino de la Ciencia."
+		},
+		{
+			"id": "drstone_kohaku_001",
+			"nombre": "Kohaku (コハク)",
+			"serie": "Dr. Stone",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una descendiente de los humanos modernos y la guerrera más fuerte de la Aldea Ishigami. Se convierte en aliada clave de Senku."
+		},
+		{
+			"id": "ruri_001",
+			"nombre": "Ruri",
+			"serie": "Dr. Stone",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "La sacerdotisa de la Aldea Ishigami y la hermana mayor de Kohaku. Guardiana de las 'Cien Historias'."
+		},
+		{
+			"id": "suika_001",
+			"nombre": "Suika",
+			"serie": "Dr. Stone",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una joven descendiente de la Aldea Ishigami que usa una sandía en la cabeza para corregir su miopía."
+		},
+		{
+			"id": "seras_001",
+			"nombre": "Seras Victoria",
+			"serie": "Hellsing",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "Una ex oficial de policía convertida en vampira draculina por Alucard. Sirve en la organización Hellsing."
+		},
+		{
+			"id": "integra_001",
+			"nombre": "Integra Fairbrook Wingates Hellsing",
+			"serie": "Hellsing",
+			"rareza": "legendario",
+			"image_url": "",
+			"descripcion": "La líder de la organización Hellsing y la maestra de Alucard. Una humana formidable y de voluntad de hierro."
+		},
+		{
+			"id": "rip_van_winkle_001",
+			"nombre": "Rip Van Winkle",
+			"serie": "Hellsing",
+			"rareza": "raro",
+			"image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTF2q1aDXz861tWDfZZTXqzeNwjAIFGptVRrGkwbqyGBA&s=10",
+			"descripcion": "Una oficial vampiro de la organización 'Millennium'. Utiliza un mosquete que dispara balas mágicas que persiguen a sus objetivos."
+		},
+		{
+			"id": "bisky_001",
+			"nombre": "Biscuit Krueger",
+			"serie": "Hunter x Hunter",
+			"rareza": "epico",
+			"image_url": "",
+			"descripcion": "Una 'Double Star Hunter' y maestra de Nen que oculta su verdadera forma musculosa bajo la apariencia de una niña."
+		},
+		{
+			"id": "machi_001",
+			"nombre": "Machi Komacine",
+			"serie": "Hunter x Hunter",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Miembro No. 3 de la Brigada Fantasma. Transmutadora que convierte su aura en hilos para coser o atacar."
+		},
+		{
+			"id": "shizuku_001",
+			"nombre": "Shizuku Murasaki",
+			"serie": "Hunter x Hunter",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Miembro No. 8 de la Brigada Fantasma. Materializa una aspiradora de Nen llamada 'Blinky' que puede succionar cualquier cosa."
+		},
+		{
+			"id": "pakunoda_001",
+			"nombre": "Pakunoda",
+			"serie": "Hunter x Hunter",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Miembro de la Brigada Fantasma. Especialista que puede leer la mente de las personas al tocarlas."
+		},
+		{
+			"id": "alluka_001",
+			"nombre": "Alluka Zoldyck",
+			"serie": "Hunter x Hunter",
+			"rareza": "mitico",
+			"image_url": "",
+			"descripcion": "La hermana menor de Killua. Posee una entidad oscura llamada 'Nanika' que puede conceder deseos a un costo terrible."
+		},
+		{
+			"id": "tamaki_001",
+			"nombre": "Tamaki Kotatsu",
+			"serie": "Fire Force",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Miembro de la Compañía 8 de la Fire Force. Su 'Lucky Lecher Lure' la mete en situaciones comprometedoras."
+		},
+		{
+			"id": "maki_o_001",
+			"nombre": "Maki Oze",
+			"serie": "Fire Force",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una piroquinética de segunda generación en la Compañía 8, ex-militar y sorprendentemente fuerte."
+		},
+		{
+			"id": "iris_001",
+			"nombre": "Iris",
+			"serie": "Fire Force",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "Una hermana de la Iglesia del Sol Santo asignada a la Compañía 8, que ofrece oraciones por las almas de los 'Infernales'."
+		},
+		{
+			"id": "hibana_001",
+			"nombre": "Hibana",
+			"serie": "Fire Force",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Capitana de la Compañía 5. Una piroquinética de tercera generación que controla el calor para crear 'Flores de Fuego'."
+		},
+		{
+			"id": "miko_001",
+			"nombre": "Miko Yotsuya",
+			"serie": "Mieruko chan",
+			"rareza": "comun",
+			"image_url": "https://i.pinimg.com/736x/c8/65/3d/c8653d1eedc435caf38b2ff32723a539.jpg",
+			"descripcion": "Una estudiante de secundaria que de repente puede ver fantasmas horribles, pero hace todo lo posible por ignorarlos."
+		},
+		{
+			"id": "urabe_001",
+			"nombre": "Mikoto Urabe",
+			"serie": "Nazo no Kanojo X",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una estudiante misteriosa que crea un vínculo único con su compañero de clase a través de su saliva."
+		},
+		{
+			"id": "morioka_001",
+			"nombre": "Morioka Moriko",
+			"serie": "Net juu no Susume",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "Una mujer de 30 años que deja su trabajo para convertirse en una 'NEET' y vivir su vida en un juego MMO."
+		},
+		{
+			"id": "osaragi_001",
+			"nombre": "Amane Osaragi",
+			"serie": "Sakamoto Days",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una asesina que trabaja con Sakamoto. Utiliza un mazo gigante y tiene una fuerza física increíble."
+		},
+		{
+			"id": "tomo_001",
+			"nombre": "Tomo Aizawa",
+			"serie": "Tomo chan wa Onnanoko!",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "Una chica marimacho que está enamorada de su mejor amigo de la infancia, quien no la ve como una chica."
+		},
+		{
+			"id": "yuri_001",
+			"nombre": "Yuri Honjo",
+			"serie": "Tenkuu Shinpan",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una estudiante atrapada en un mundo de rascacielos interconectados, perseguida por asesinos enmascarados."
+		},
+		{
+			"id": "tsukasa_001",
+			"nombre": "Tsukasa Yuzaki",
+			"serie": "Tonikaku Kawaii",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "Una chica misteriosa y hermosa que acepta casarse con Nasa después de que él sobrevive a un accidente."
+		},
+		{
+			"id": "uzaki_001",
+			"nombre": "Hana Uzaki",
+			"serie": "Uzaki chan wa Asobitai!",
+			"rareza": "epico",
+			"image_url": "https://static.zerochan.net/Uzaki.Hana.full.2995229.jpg",
+			"descripcion": "Una estudiante universitaria enérgica y alegre que disfruta molestando a su senpai, Shinichi."
+		},
+		{
+			"id": "mei_m_001",
+			"nombre": "Mei Misaki",
+			"serie": "Another",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una chica misteriosa con un parche en el ojo que es ignorada por el resto de su clase debido a una maldición."
+		},
+		{
+			"id": "kozue_001",
+			"nombre": "Kozue Matsumoto",
+			"serie": "Baki",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "La novia de Baki Hanma, que lo apoya en su búsqueda por convertirse en el luchador más fuerte."
+		},
+		{
+			"id": "kayano_001",
+			"nombre": "Kaede Kayano",
+			"serie": "Ansatsu Kyoushitsu",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Estudiante de la Clase 3-E. Amable y aparentemente pasiva, pero oculta un secreto sorprendente."
+		},
+		{
+			"id": "irina_001",
+			"nombre": "Irina Jelavic",
+			"serie": "Ansatsu Kyoushitsu",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una asesina profesional contratada para matar a Koro-sensei, que se infiltra como la profesora de inglés 'Bitch-sensei'."
+		},
+		{
+			"id": "anri_001",
+			"nombre": "Anri Teieri",
+			"serie": "Blue Lock",
+			"rareza": "comun",
+			"image_url": "",
+			"descripcion": "Miembro de la Unión de Fútbol de Japón y la asistente de Jinpachi Ego, que cree apasionadamente en el proyecto Blue Lock."
+		},
+		{
+			"id": "momo_a_001",
+			"nombre": "Momo Ayase",
+			"serie": "Dandadan",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una estudiante de secundaria que cree en los fantasmas y despierta poderes psíquicos tras un encuentro."
+		},
+		{
+			"id": "seiko_001",
+			"nombre": "Seiko Ayase",
+			"serie": "Dandadan",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "La abuela de Momo. Una médium espiritual poderosa que ayuda al grupo a luchar contra lo oculto."
+		},
+		{
+			"id": "ai_001",
+			"nombre": "Ai Ohto",
+			"serie": "Wonder Egg Priority",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una chica con heterocromía que, tras el suicidio de su amiga, compra 'Wonder Eggs' para proteger a otras chicas."
+		},
+		{
+			"id": "neiru_001",
+			"nombre": "Neiru Aonuma",
+			"serie": "Wonder Egg Priority",
+			"rareza": "raro",
+			"image_url": "",
+			"descripcion": "Una chica tranquila y presidenta de una compañía. Extremadamente inteligente pero aislada emocionalmente."
+		}
+	]
+}
