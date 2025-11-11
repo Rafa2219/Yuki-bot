@@ -3466,7 +3466,7 @@ async def vender_personaje(ctx, mencion: discord.Member = None, character_id: st
     
     # Reutilizar la lógica del comando directo
     await handle_vender_command(ctx, mencion, character_id, price)
-
+#workspace
 
 
 @bot.command(name='vp')
