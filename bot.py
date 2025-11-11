@@ -9,12 +9,12 @@ import json
 import asyncio
 import aiohttp
 from typing import Optional, Dict, List
-from discord.ui import View, Button
 import logging
 import requests
 import uuid
 from datetime import datetime
-
+from datetime import timedelta
+from discord.ui import Button, View, Modal, TextInput
 
 
 # Configurar logging para mejor control
@@ -64,7 +64,7 @@ def normalizar_comando(texto: str) -> str:
 	texto = "".join(c for c in texto if unicodedata.category(c) != "Mn")
 	
 	# Preservar menciones y espacios importantes
-	texto = texto.replace(" <@", "<@").replace(" <#", "<#").replace("! ", "!").replace(" !","!")
+	texto = texto.replace("! ", "!").replace(" !","!")
 	return ' '.join(texto.split())
 
 # ============ EVENTOS PRINCIPALES ============
@@ -138,7 +138,7 @@ async def status(ctx):
 	)
 	embed.add_field(name="Latencia", value=f"{round(bot.latency * 1000)}ms", inline=True)
 	await ctx.send(embed=embed)
-
+	
 @bot.command(name='besaa')
 async def besaa(ctx, usuario: discord.Member = None):
 	"""Comando de beso optimizado y unificado"""
@@ -158,7 +158,7 @@ async def besaa(ctx, usuario: discord.Member = None):
 	respuestas = [
 		f"\\*besa a {usuario.mention}\\* y luego sigue con su vida tranquila...",
 		f"\\*besa a {usuario.mention}\\* y se queda sonriendo...",
-		f"¡Wow!\\n\\*besa a {usuario.mention}\\* y desaparece misteriosamente 🎭",
+		f"¡Wow!\\n\\*besa a {usuario.mention}\\* y desaparece misteriosamente 🌼",
 		f"¡Momento épico!\\n\\*besa a {usuario.mention}\\* y continúa su aventura ⚔️",
 		f"\\*besa a {usuario.mention}\\*",
 		f"¡Sorpresa!\\n\\*besa a {usuario.mention}\\* y todos... \\n se quedan en silencio xd 🤫",
@@ -1226,7 +1226,7 @@ async def recomendacion_help(interaction: discord.Interaction):
         name="🎯 Comando Principal (con Menú)",
         value=(
             "**`/recomendacion`**\n"
-            "• Opciones predefinidas con emojis\n"
+            "• Opciones predefinidas\n"
             "• Menú desplegable fácil de usar\n"
             "• Categorías principales garantizadas"
         ),
@@ -1311,6 +1311,519 @@ async def on_ready():
 
 
 
+# ============ SISTEMA DE VENTAS CON REGATEO CORREGIDO ============
+
+# Configuración
+OFFER_TIME = 60*5  # segundos
+
+# Almacenamiento de ofertas activas
+active_offers = {}
+
+class BuyerOfferModal(Modal):
+    def __init__(self, offer_data):
+        super().__init__(title="Hacer Oferta")
+        self.offer_data = offer_data
+        self.price_input = TextInput(
+            label="Tu Oferta",
+            placeholder="Ingresa el precio que quieres pagar...",
+            required=True
+        )
+        self.add_item(self.price_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            new_price = int(self.price_input.value)
+            if new_price <= 0:
+                await interaction.response.send_message("❌ El precio debe ser mayor a 0", ephemeral=True)
+                return
+            
+            # Verificar que el comprador tenga suficiente dinero
+            buyer_data = economy_system.get_user_data(str(self.offer_data['buyer_id']))
+            if buyer_data["monedas"] < new_price:
+                await interaction.response.send_message(
+                    f"❌ No tienes suficientes monedas. Necesitas {new_price}🪙 pero tienes {buyer_data['monedas']}🪙",
+                    ephemeral=True
+                )
+                return
+            
+            # Actualizar la oferta del comprador
+            self.offer_data['buyer_offer'] = new_price
+            self.offer_data['last_offer_by'] = interaction.user.id
+            self.offer_data['has_pending_offer'] = True
+            
+            # Editar embed con nueva oferta
+            embed = self.create_offer_embed()
+            view = TradeView(self.offer_data)
+            
+            await interaction.response.edit_message(embed=embed, view=view)
+            
+            # Notificar en el chat
+            await interaction.followup.send(
+                f"💬 {interaction.user.mention} ha hecho una oferta de **{new_price}🪙** por **{self.offer_data['item_name']}**",
+                ephemeral=False
+            )
+                
+        except ValueError:
+            await interaction.response.send_message("❌ Ingresa un número válido", ephemeral=True)
+
+    def create_offer_embed(self):
+        embed = discord.Embed(
+            title="💰 Oferta de Venta" if self.offer_data['type'] == 'item' else "🌟 Venta de Personaje",
+            color=0xf39c12,
+            timestamp=discord.utils.utcnow()
+        )
+        
+        seller = self.offer_data.get('seller')
+        buyer = self.offer_data.get('buyer')
+        item_name = self.offer_data.get('item_name', 'Item')
+        current_price = self.offer_data.get('current_price', 0)
+        buyer_offer = self.offer_data.get('buyer_offer')
+        
+        embed.add_field(name="👤 Vendedor", value=seller.mention, inline=True)
+        embed.add_field(name="👥 Comprador", value=buyer.mention, inline=True)
+        embed.add_field(
+            name="🎁 Item" if self.offer_data['type'] == 'item' else "🌠 Personaje", 
+            value=item_name, 
+            inline=True
+        )
+        
+        # Precio de venta actual
+        embed.add_field(
+            name="💰 Precio de Venta",
+            value=f"**{current_price}🪙**",
+            inline=True
+        )
+        
+        # Oferta del comprador
+        if buyer_offer:
+            embed.add_field(
+                name="💬 Tu Oferta",
+                value=f"**{buyer_offer}🪙**",
+                inline=True
+            )
+            
+            # Estado de la oferta
+            if buyer_offer >= current_price:
+                status = "✅ Mayor o igual al precio"
+                embed.add_field(name="📊 Estado", value=status, inline=True)
+            else:
+                difference = current_price - buyer_offer
+                status = f"📉 {difference}🪙 menos"
+                embed.add_field(name="📊 Estado", value=status, inline=True)
+        else:
+            embed.add_field(name="💬 Tu Oferta", value="❌ Sin oferta", inline=True)
+            embed.add_field(name="📊 Estado", value="⏳ Esperando oferta", inline=True)
+        
+        # Información adicional para personajes
+        if self.offer_data['type'] == 'character':
+            embed.add_field(name="📺 Serie", value=self.offer_data.get('serie', 'Desconocida'), inline=True)
+            embed.add_field(
+                name="✨ Rareza", 
+                value=f"{ANIME_RARITY_SYSTEM[self.offer_data.get('rarity', 'comun')]['emoji']} {self.offer_data.get('rarity', 'comun').title()}", 
+                inline=True
+            )
+            embed.add_field(name="🏷️ ID", value=f"`{self.offer_data['item_id']}`", inline=True)
+        else:
+            embed.add_field(name="🏷️ ID", value=f"`{self.offer_data['item_id']}`", inline=True)
+            embed.add_field(name=" ", value=" ", inline=True)
+            embed.add_field(name=" ", value=" ", inline=True)
+        
+        # Información de monedas
+        embed.add_field(
+            name="👛 Tus Monedas",
+            value=f"{economy_system.get_user_data(str(buyer.id))['monedas']}🪙",
+            inline=True
+        )
+        
+        embed.add_field(
+            name="💰 Monedas del Vendedor", 
+            value=f"{economy_system.get_user_data(str(seller.id))['monedas']}🪙",
+            inline=True
+        )
+        
+        # Instrucciones
+        embed.add_field(
+            name="💡 Cómo funciona",
+            value=(
+                "• **Ofertar**: Propón un precio\n"
+                "• **Comprar Ahora**: Compra al precio actual\n"
+                "• **El vendedor decide** si acepta tu oferta"
+            ),
+            inline=False
+        )
+        
+        if self.offer_data.get('has_pending_offer'):
+            embed.set_footer(text=f"⏰ Oferta pendiente • El vendedor debe aceptar • Válida por {OFFER_TIME}s")
+        else:
+            embed.set_footer(text=f"⏰ Esperando oferta • Válida por {OFFER_TIME}s")
+        
+        return embed
+
+class SellerPriceModal(Modal):
+    def __init__(self, offer_data):
+        super().__init__(title="Modificar Precio de Venta")
+        self.offer_data = offer_data
+        self.price_input = TextInput(
+            label="Nuevo Precio de Venta",
+            placeholder="Ingresa el nuevo precio de venta...",
+            required=True
+        )
+        self.add_item(self.price_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            new_price = int(self.price_input.value)
+            if new_price <= 0:
+                await interaction.response.send_message("❌ El precio debe ser mayor a 0", ephemeral=True)
+                return
+            
+            # Actualizar el precio de venta
+            self.offer_data['current_price'] = new_price
+            self.offer_data['last_offer_by'] = interaction.user.id
+            # Resetear la oferta del comprador cuando el vendedor cambia el precio
+            self.offer_data['buyer_offer'] = None
+            self.offer_data['has_pending_offer'] = False
+            
+            # Editar embed con nuevo precio
+            embed = self.create_offer_embed()
+            view = TradeView(self.offer_data)
+            
+            await interaction.response.edit_message(embed=embed, view=view)
+            
+            # Notificar en el chat
+            await interaction.followup.send(
+                f"📊 {interaction.user.mention} ha establecido el precio en **{new_price}🪙** para **{self.offer_data['item_name']}**",
+                ephemeral=False
+            )
+                
+        except ValueError:
+            await interaction.response.send_message("❌ Ingresa un número válido", ephemeral=True)
+
+    def create_offer_embed(self):
+        # Reutilizar la misma función de embed
+        modal = BuyerOfferModal(self.offer_data)
+        return modal.create_offer_embed()
+
+class TradeView(View):
+    def __init__(self, offer_data):
+        super().__init__(timeout=OFFER_TIME)
+        self.offer_data = offer_data
+        self.offer_id = offer_data['offer_id']
+        
+    async def on_timeout(self):
+        if self.offer_id in active_offers:
+            offer_data = active_offers[self.offer_id]
+            offer_data['expired'] = True
+            
+            embed = discord.Embed(
+                title="⏰ Oferta Expirada",
+                description="El tiempo para esta oferta ha terminado",
+                color=0xe74c3c
+            )
+            
+            try:
+                message = offer_data.get('message')
+                if message:
+                    await message.edit(embed=embed, view=None)
+            except:
+                pass
+            
+            if self.offer_id in active_offers:
+                del active_offers[self.offer_id]
+    
+    @discord.ui.button(label="💬 Ofertar", style=discord.ButtonStyle.primary, custom_id="make_offer")
+    async def make_offer(self, interaction: discord.Interaction, button: Button):
+        # Solo el COMPRADOR puede hacer ofertas
+        if interaction.user.id != self.offer_data['buyer_id']:
+            await interaction.response.send_message("❌ Solo el comprador puede hacer ofertas", ephemeral=True)
+            return
+        
+        modal = BuyerOfferModal(self.offer_data)
+        await interaction.response.send_modal(modal)
+    
+    @discord.ui.button(label="✏️ Modificar Precio", style=discord.ButtonStyle.secondary, custom_id="modify_price")
+    async def modify_price(self, interaction: discord.Interaction, button: Button):
+        # Solo el VENDEDOR puede modificar el precio
+        if interaction.user.id != self.offer_data['seller_id']:
+            await interaction.response.send_message("❌ Solo el vendedor puede modificar el precio", ephemeral=True)
+            return
+        
+        modal = SellerPriceModal(self.offer_data)
+        await interaction.response.send_modal(modal)
+    
+    @discord.ui.button(label="✅ Aceptar Oferta", style=discord.ButtonStyle.success, custom_id="accept_offer")
+    async def accept_offer(self, interaction: discord.Interaction, button: Button):
+        # CORREGIDO: Solo el VENDEDOR puede aceptar ofertas
+        if interaction.user.id != self.offer_data['seller_id']:
+            await interaction.response.send_message("❌ Solo el vendedor puede aceptar ofertas", ephemeral=True)
+            return
+        
+        # Verificar que hay una oferta pendiente del comprador
+        if not self.offer_data.get('has_pending_offer') or not self.offer_data.get('buyer_offer'):
+            await interaction.response.send_message("❌ No hay una oferta pendiente del comprador para aceptar", ephemeral=True)
+            return
+        
+        # CORREGIDO: Usar la oferta del comprador cuando el vendedor acepta
+        try:
+            item_id = self.offer_data['item_id']
+            seller_id = str(self.offer_data['seller_id'])
+            buyer_id = str(self.offer_data['buyer_id'])
+            price = self.offer_data['buyer_offer']  # CORRECCIÓN: Usar la oferta del comprador
+            
+            # Verificar que el comprador tiene suficiente dinero
+            buyer_data = economy_system.get_user_data(buyer_id)
+            if buyer_data["monedas"] < price:
+                await interaction.response.send_message(
+                    f"❌ El comprador no tiene suficientes monedas. Necesita {price}🪙 pero tiene {buyer_data['monedas']}🪙",
+                    ephemeral=True
+                )
+                return
+            
+            # Verificar que el vendedor aún tiene el item
+            if self.offer_data['type'] == 'character':
+                character = anime_gacha_system.get_character_by_id(seller_id, item_id)
+                if not character:
+                    await interaction.response.send_message("❌ El personaje ya no está disponible", ephemeral=True)
+                    return
+                
+                # Verificar espacio del comprador
+                buyer_gacha_data = anime_gacha_system.get_user_data(buyer_id)
+                if len(buyer_gacha_data.get("personajes", [])) >= GACHA_CONFIG['max_inventory_size']:
+                    await interaction.response.send_message("❌ La colección del comprador está llena", ephemeral=True)
+                    return
+                
+                # Realizar transferencia del personaje
+                success, message = await anime_gacha_system.transferir_personaje(seller_id, buyer_id, item_id)
+                
+            else:  # item
+                user_data = economy_system.get_user_data(seller_id)
+                item_found = any(item.get('unique_id') == item_id or item.get('id') == item_id for item in user_data.get("inventario", []))
+                if not item_found:
+                    await interaction.response.send_message("❌ El item ya no está disponible", ephemeral=True)
+                    return
+                
+                # Verificar espacio del comprador
+                buyer_economy_data = economy_system.get_user_data(buyer_id)
+                if len(buyer_economy_data.get("inventario", [])) >= ECONOMY_CONFIG['max_inventory_size']:
+                    await interaction.response.send_message("❌ El inventario del comprador está lleno", ephemeral=True)
+                    return
+                
+                # Realizar transferencia del item
+                success, message = await economy_system.transfer_item(seller_id, buyer_id, item_id)
+            
+            if success:
+                # Transferir monedas al PRECIO DE LA OFERTA DEL COMPRADOR
+                await economy_system.remove_coins(buyer_id, price)
+                await economy_system.add_coins(seller_id, price)
+                
+                # Crear embed de éxito
+                if self.offer_data['type'] == 'character':
+                    embed = self.create_character_success_embed(price, buyer_data, economy_system.get_user_data(seller_id))
+                else:
+                    embed = self.create_item_success_embed(price, buyer_data, economy_system.get_user_data(seller_id))
+                
+            else:
+                embed = discord.Embed(
+                    title="❌ Error en Transacción",
+                    description=f"No se pudo transferir el item: {message}",
+                    color=0xe74c3c
+                )
+                
+        except Exception as e:
+            print(f"Error en transacción de venta: {e}")
+            embed = discord.Embed(
+                title="❌ Error",
+                description=f"Error al procesar la venta: {str(e)}",
+                color=0xe74c3c
+            )
+        
+        await interaction.response.edit_message(embed=embed, view=None)
+        
+        # Limpiar oferta
+        if self.offer_id in active_offers:
+            del active_offers[self.offer_id]
+    
+    @discord.ui.button(label="🛒 Comprar Ahora", style=discord.ButtonStyle.success, custom_id="buy_now")
+    async def buy_now(self, interaction: discord.Interaction, button: Button):
+        # El COMPRADOR puede comprar inmediatamente al precio actual
+        if interaction.user.id != self.offer_data['buyer_id']:
+            await interaction.response.send_message("❌ Solo el comprador puede comprar el item", ephemeral=True)
+            return
+        
+        # CORRECTO: Usar el precio actual (del vendedor) para compra inmediata
+        try:
+            item_id = self.offer_data['item_id']
+            seller_id = str(self.offer_data['seller_id'])
+            buyer_id = str(self.offer_data['buyer_id'])
+            price = self.offer_data['current_price']  # Precio establecido por el vendedor
+            
+            # Verificar que el comprador tiene suficiente dinero
+            buyer_data = economy_system.get_user_data(buyer_id)
+            if buyer_data["monedas"] < price:
+                await interaction.response.send_message(
+                    f"❌ No tienes suficientes monedas. Necesitas {price}🪙 pero tienes {buyer_data['monedas']}🪙",
+                    ephemeral=True
+                )
+                return
+            
+            # Verificar que el vendedor aún tiene el item
+            if self.offer_data['type'] == 'character':
+                character = anime_gacha_system.get_character_by_id(seller_id, item_id)
+                if not character:
+                    await interaction.response.send_message("❌ El personaje ya no está disponible", ephemeral=True)
+                    return
+                
+                # Verificar espacio del comprador
+                buyer_gacha_data = anime_gacha_system.get_user_data(buyer_id)
+                if len(buyer_gacha_data.get("personajes", [])) >= GACHA_CONFIG['max_inventory_size']:
+                    await interaction.response.send_message("❌ Tu colección de personajes está llena", ephemeral=True)
+                    return
+                
+                # Realizar transferencia del personaje
+                success, message = await anime_gacha_system.transferir_personaje(seller_id, buyer_id, item_id)
+                
+            else:  # item
+                user_data = economy_system.get_user_data(seller_id)
+                item_found = any(item.get('unique_id') == item_id or item.get('id') == item_id for item in user_data.get("inventario", []))
+                if not item_found:
+                    await interaction.response.send_message("❌ El item ya no está disponible", ephemeral=True)
+                    return
+                
+                # Verificar espacio del comprador
+                buyer_economy_data = economy_system.get_user_data(buyer_id)
+                if len(buyer_economy_data.get("inventario", [])) >= ECONOMY_CONFIG['max_inventory_size']:
+                    await interaction.response.send_message("❌ Tu inventario está lleno", ephemeral=True)
+                    return
+                
+                # Realizar transferencia del item
+                success, message = await economy_system.transfer_item(seller_id, buyer_id, item_id)
+            
+            if success:
+                # Transferir monedas al PRECIO DE VENTA
+                await economy_system.remove_coins(buyer_id, price)
+                await economy_system.add_coins(seller_id, price)
+                
+                # Crear embed de éxito
+                if self.offer_data['type'] == 'character':
+                    embed = self.create_character_success_embed(price, buyer_data, economy_system.get_user_data(seller_id))
+                else:
+                    embed = self.create_item_success_embed(price, buyer_data, economy_system.get_user_data(seller_id))
+                
+            else:
+                embed = discord.Embed(
+                    title="❌ Error en Transacción",
+                    description=f"No se pudo transferir el item: {message}",
+                    color=0xe74c3c
+                )
+                
+        except Exception as e:
+            print(f"Error en transacción de compra: {e}")
+            embed = discord.Embed(
+                title="❌ Error",
+                description=f"Error al procesar la compra: {str(e)}",
+                color=0xe74c3c
+            )
+        
+        await interaction.response.edit_message(embed=embed, view=None)
+        
+        # Limpiar oferta
+        if self.offer_id in active_offers:
+            del active_offers[self.offer_id]
+    
+    def create_item_success_embed(self, price, buyer_data, seller_data):
+        embed = discord.Embed(
+            title="✅ Venta Completada",
+            description=f"¡{self.offer_data['seller'].mention} ha **aceptado la oferta** y vendido **{self.offer_data['item_name']}** a {self.offer_data['buyer'].mention} por **{price}🪙**!",
+            color=0x2ecc71
+        )
+        
+        embed.add_field(
+            name="💰 Transacción Aceptada",
+            value=(
+                f"**Oferta del comprador:** {price}🪙\n"
+                f"**Vendedor ({self.offer_data['seller'].mention}):** +{price}🪙 (Total: {seller_data['monedas']}🪙)\n"
+                f"**Comprador ({self.offer_data['buyer'].mention}):** -{price}🪙 (Total: {buyer_data['monedas']}🪙)"
+            ),
+            inline=False
+        )
+        
+        return embed
+    
+    def create_character_success_embed(self, price, buyer_data, seller_data):
+        embed = discord.Embed(
+            title="🌟 ¡Oferta Aceptada!",
+            description=f"¡{self.offer_data['seller'].mention} ha **aceptado la oferta** y vendido a **{self.offer_data['item_name']}** a {self.offer_data['buyer'].mention} por **{price}🪙**!",
+            color=0x9b59b6
+        )
+        
+        if self.offer_data.get('image_url'):
+            embed.set_thumbnail(url=self.offer_data['image_url'])
+        
+        embed.add_field(
+            name="💰 Transacción Aceptada",
+            value=(
+                f"**Oferta del comprador:** {price}🪙\n"
+                f"**Vendedor ({self.offer_data['seller'].mention}):** +{price}🪙 (Total: {seller_data['monedas']}🪙)\n"
+                f"**Comprador ({self.offer_data['buyer'].mention}):** -{price}🪙 (Total: {buyer_data['monedas']}🪙)"
+            ),
+            inline=False
+        )
+        
+        embed.add_field(
+            name="🌠 Personaje Transferido",
+            value=(
+                f"**{self.offer_data['item_name']}**\n"
+                f"**Serie:** {self.offer_data.get('serie', 'Desconocida')}\n"
+                f"**Rareza:** {self.offer_data.get('rarity', 'comun').title()}"
+            ),
+            inline=False
+        )
+        
+        return embed
+    
+    @discord.ui.button(label="❌ Cancelar", style=discord.ButtonStyle.danger, custom_id="cancel_offer")
+    async def cancel_offer(self, interaction: discord.Interaction, button: Button):
+        # Tanto vendedor como comprador pueden cancelar
+        if interaction.user.id not in [self.offer_data['seller_id'], self.offer_data['buyer_id']]:
+            await interaction.response.send_message("❌ Solo el vendedor o comprador pueden cancelar esta oferta", ephemeral=True)
+            return
+        
+        role = "vendedor" if interaction.user.id == self.offer_data['seller_id'] else "comprador"
+        
+        embed = discord.Embed(
+            title="❌ Oferta Cancelada",
+            description=f"El {role} ha cancelado esta oferta",
+            color=0xe74c3c
+        )
+        
+        await interaction.response.edit_message(embed=embed, view=None)
+        
+        # Limpiar oferta
+        if self.offer_id in active_offers:
+            del active_offers[self.offer_id]
+            
+            
+
+
+
+
+
+
+
+
+
+
+
+
+            
+            
+            
+            
+            
+            
+            
+            
+            
 
 
 
@@ -1325,14 +1838,82 @@ async def on_ready():
 
 
 
+
+
+
+
+
+#
 
 # ============ SISTEMA DE ECONOMÍA Y GACHA ============
-# Configuración de la economía (agregar al inicio del código)
+
+#
+
+@bot.command(name='pagar')
+async def pay(ctx, mencion: discord.Member, cantidad: int):
+    """Transferir monedas a otro usuario"""
+    try:
+        # Validaciones básicas
+        if mencion.id == ctx.author.id:
+            await ctx.send("❌ No puedes transferir monedas a ti mismo.\nNo van a multiplicarse.")
+            return
+        if cantidad < 0:
+        	await ctx.send(">>> (i) Para realizar cobros usa `!cobrar`")
+        	return
+        if cantidad == 0:
+            await ctx.send("La cantidad debe ser al menos 1🪙 moneda")
+            return
+        
+        # Obtener datos de ambos usuarios
+        user_from_data = economy_system.get_user_data(str(ctx.author.id))
+        user_to_data = economy_system.get_user_data(str(mencion.id))
+        
+        # Verificar si el remitente tiene suficientes monedas
+        if user_from_data["monedas"] < cantidad:
+            await ctx.send(f"❌ No tienes suficientes monedas. Tienes {user_from_data['monedas']} monedas")
+            return
+        
+        # Realizar la transferencia
+        user_from_data["monedas"] -= cantidad
+        user_to_data["monedas"] += cantidad
+        
+        # Guardar los cambios
+        await economy_system._async_save()
+        
+        # Crear embed de confirmación
+        embed = discord.Embed(
+            title="✅ Transferencia Exitosa",
+            description=f"Has transferido **{cantidad}** moneda(s) a {mencion.mention}",
+            color=0x00ff88
+        )
+        
+        # Añadir información de saldos actualizados
+        embed.add_field(
+            name="💰 Saldos actualizados",
+            value=(
+                f"**{ctx.author.mention}:** {user_from_data['monedas']} monedas (-{cantidad})\n"
+                f"**{mencion.mention}:** {user_to_data['monedas']} monedas (+{cantidad})"
+            ),
+            inline=False
+        )
+        
+        await ctx.send(embed=embed)
+        
+    except Exception as e:
+        print(f"Error en comando pay: {e}")
+        await ctx.send("❌ Error al realizar la transferencia")
+
+
+
+
+
+
+
 ECONOMY_CONFIG = {
-    'daily_coins': 100,
+    'daily_coins': 150,
     'gacha_cost': 50,
-    'starting_coins': 200,
-    'max_inventory_size': 100
+    'starting_coins': 500,
+    'max_inventory_size': 2**8
 }
 
 # Sistema de rarezas y probabilidades
@@ -1345,49 +1926,33 @@ RARITY_SYSTEM = {
 }
 
 # Base de datos de items disponibles
-GACHA_ITEMS = {
-    "personajes": [
-        {"id": "char_001", "nombre": "Aventurero Novato", "tipo": "personaje", "rareza": "comun", "valor": 25},
-        {"id": "char_002", "nombre": "Guerrero del Sol", "tipo": "personaje", "rareza": "raro", "valor": 75},
-        {"id": "char_003", "nombre": "Mago Arcano", "tipo": "personaje", "rareza": "epico", "valor": 200},
-        {"id": "char_004", "nombre": "Caballero Divino", "tipo": "personaje", "rareza": "legendario", "valor": 500},
-        {"id": "char_005", "nombre": "Héroe del Destino", "tipo": "personaje", "rareza": "mitico", "valor": 1250}
-    ],
-    "armas": [
-        {"id": "wep_001", "nombre": "Espada de Hierro", "tipo": "arma", "rareza": "comun", "valor": 20},
-        {"id": "wep_002", "nombre": "Arco de Cazador", "tipo": "arma", "rareza": "comun", "valor": 20},
-        {"id": "wep_003", "nombre": "Báculo Mágico", "tipo": "arma", "rareza": "raro", "valor": 60},
-        {"id": "wep_004", "nombre": "Espada de Plata", "tipo": "arma", "rareza": "epico", "valor": 150},
-        {"id": "wep_005", "nombre": "Hacha del Titán", "tipo": "arma", "rareza": "legendario", "valor": 400},
-        {"id": "wep_006", "nombre": "Excalibur", "tipo": "arma", "rareza": "mitico", "valor": 1000}
-    ],
-    "artefactos": [
-        {"id": "art_001", "nombre": "Anillo de Bronce", "tipo": "artefacto", "rareza": "comun", "valor": 15},
-        {"id": "art_002", "nombre": "Amuleto de Fuerza", "tipo": "artefacto", "rareza": "raro", "valor": 45},
-        {"id": "art_003", "nombre": "Capa de la Invisibilidad", "tipo": "artefacto", "rareza": "epico", "valor": 120},
-        {"id": "art_004", "nombre": "Corona del Rey", "tipo": "artefacto", "rareza": "legendario", "valor": 300},
-        {"id": "art_005", "nombre": "Orbe del Infinito", "tipo": "artefacto", "rareza": "mitico", "valor": 750}
-    ],
-    "mascotas": [
-        {"id": "pet_001", "nombre": "Gatito", "tipo": "mascota", "rareza": "comun", "valor": 30},
-        {"id": "pet_002", "nombre": "Lobo Joven", "tipo": "mascota", "rareza": "raro", "valor": 90},
-        {"id": "pet_003", "nombre": "Fénix", "tipo": "mascota", "rareza": "epico", "valor": 250},
-        {"id": "pet_004", "nombre": "Dragón", "tipo": "mascota", "rareza": "legendario", "valor": 600},
-        {"id": "pet_005", "nombre": "Fénix Ancestral", "tipo": "mascota", "rareza": "mitico", "valor": 1500}
-    ]
-}
+def cargar_items_desde_json():
+    """Cargar items directamente desde el archivo JSON"""
+    try:
+        with open('gacha_items.json', 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            return data
+    except FileNotFoundError:
+        print("gacha_items.json no encontrado.")
+      
+    except Exception as e:
+        print(f"❌ Error cargando artículos: {e}")
+        return {}
+
+GACHA_ITEMS = cargar_items_desde_json()
+
 
 class EconomySystem:
-    """Sistema de economía optimizado para alto tráfico - CORREGIDO"""
+    """Sistema de economía optimizado para alto tráfico"""
     
     def __init__(self):
         self.data_file = 'economy_data.json'
-        self._cache = {}  # Cache en memoria para rápido acceso
-        self._lock = asyncio.Lock()  # Lock para evitar condiciones de carrera
+        self._cache = {}
+        self._lock = asyncio.Lock()
         self._load_data()
     
     def _load_data(self):
-        """Cargar datos desde JSON - optimizado"""
+        """Cargar datos desde JSON"""
         try:
             if os.path.exists(self.data_file):
                 with open(self.data_file, 'r', encoding='utf-8') as f:
@@ -1400,7 +1965,7 @@ class EconomySystem:
             self._cache = {"users": {}, "last_daily": {}}
     
     def _save_data(self):
-        """Guardar datos a JSON - optimizado con backup"""
+        """Guardar datos a JSON"""
         try:
             with open(self.data_file, 'w', encoding='utf-8') as f:
                 json.dump(self._cache, f, indent=2, ensure_ascii=False)
@@ -1408,11 +1973,10 @@ class EconomySystem:
             print(f"❌ Error guardando datos económicos: {e}")
     
     async def _atomic_operation(self, operation):
-        """Ejecutar operación atómicamente con lock - CORREGIDO"""
+        """Ejecutar operación atómicamente con lock"""
         async with self._lock:
             try:
-                result = await operation()  # CORREGIDO: añadir await
-                # Guardar de forma asíncrona sin bloquear
+                result = await operation()
                 asyncio.create_task(self._async_save())
                 return result
             except Exception as e:
@@ -1465,11 +2029,10 @@ class EconomySystem:
             if rand <= cumulative:
                 return rarity
         
-        return "comun"  # Fallback
+        return "comun"
     
     def get_random_item(self, rarity: str):
         """Obtener item aleatorio de una rareza específica"""
-        # Filtrar todos los items de la rareza deseada
         available_items = []
         for category in GACHA_ITEMS.values():
             for item in category:
@@ -1478,12 +2041,10 @@ class EconomySystem:
         
         if available_items:
             item = random.choice(available_items).copy()
-            # Añadir ID único y timestamp
             item["unique_id"] = str(uuid.uuid4())[:8]
             item["obtenido_en"] = datetime.now().isoformat()
             return item
         else:
-            # Fallback: crear item genérico
             return {
                 "id": "fallback",
                 "unique_id": str(uuid.uuid4())[:8],
@@ -1495,28 +2056,23 @@ class EconomySystem:
             }
     
     async def gacha_pull(self, user_id: str):
-        """Realizar un pull del gacha - CORREGIDO"""
+        """Realizar un pull del gacha"""
         async def operation():
             user_data = self.get_user_data(user_id)
             
-            # Verificar si tiene monedas
             if user_data["monedas"] < ECONOMY_CONFIG['gacha_cost']:
                 return None, "❌ No tienes suficientes monedas"
             
-            # Verificar espacio en inventario
             if len(user_data["inventario"]) >= ECONOMY_CONFIG['max_inventory_size']:
                 return None, "❌ Tu inventario está lleno"
             
-            # Realizar pull
             rarity = self.get_rarity()
             item = self.get_random_item(rarity)
             
-            # Añadir a inventario
             user_data["inventario"].append(item)
             user_data["monedas"] -= ECONOMY_CONFIG['gacha_cost']
             user_data["total_gachas"] += 1
             
-            # Si es personaje, añadir a lista de obtenidos
             if item["tipo"] == "personaje":
                 user_data["personajes_obtenidos"].append(item["id"])
             
@@ -1544,7 +2100,6 @@ class EconomySystem:
             from_user = self.get_user_data(from_user_id)
             to_user = self.get_user_data(to_user_id)
             
-            # Buscar item en inventario del remitente
             item_index = None
             item_to_transfer = None
             
@@ -1557,11 +2112,9 @@ class EconomySystem:
             if item_index is None:
                 return False, "❌ Item no encontrado en tu inventario"
             
-            # Verificar espacio en inventario del destinatario
             if len(to_user["inventario"]) >= ECONOMY_CONFIG['max_inventory_size']:
                 return False, "❌ El inventario del destinatario está lleno"
             
-            # Transferir item
             from_user["inventario"].pop(item_index)
             to_user["inventario"].append(item_to_transfer)
             
@@ -1574,7 +2127,6 @@ class EconomySystem:
         async def operation():
             user_data = self.get_user_data(user_id)
             
-            # Buscar item en inventario
             item_index = None
             item_to_sell = None
             
@@ -1587,10 +2139,8 @@ class EconomySystem:
             if item_index is None:
                 return False, "❌ Item no encontrado en tu inventario"
             
-            # Calcular valor de venta (70% del valor original)
             sell_value = int(item_to_sell["valor"] * 0.7)
             
-            # Vender item
             user_data["inventario"].pop(item_index)
             user_data["monedas"] += sell_value
             
@@ -1609,7 +2159,6 @@ class EconomySystem:
                 if last_claim == today:
                     return False, "❌ Ya reclamaste tu recompensa diaria hoy"
             
-            # Dar recompensa
             user_data = self.get_user_data(user_id)
             user_data["monedas"] += ECONOMY_CONFIG['daily_coins']
             self._cache["last_daily"][user_id_str] = today
@@ -1621,12 +2170,457 @@ class EconomySystem:
 # Instancia global del sistema económico
 economy_system = EconomySystem()
 
-# ============ COMANDOS DE ECONOMÍA CORREGIDOS ============
+# ============ SISTEMA DE GACHA DE PERSONAJES ============
+# ============ SISTEMA DE GACHA DE PERSONAJES ============
+GACHA_CONFIG = {
+    'amuleto_cost': 750,
+    'coins_per_week': 127,
+    'claim_cooldown_days': 7,
+    'starting_amuleto': 15,
+    'max_inventory_size': 2**10
+}
+
+ANIME_RARITY_SYSTEM = {
+    "comun": {"prob": 55, "color": 0x808080, "coin_multiplier": 1.0, "emoji": "🌱"},
+    "raro": {"prob": 30, "color": 0x0070DD, "coin_multiplier": 1.5, "emoji": "💠"},
+    "epico": {"prob": 10, "color": 0xA335EE, "coin_multiplier": 2.0, "emoji": "👑"},
+    "legendario": {"prob": 4, "color": 0xFF8000, "coin_multiplier": 3.0, "emoji": "🌼"},
+    "mitico": {"prob": 1, "color": 0xE6CC80, "coin_multiplier": 8.0, "emoji": "🌠"}
+}
+
+# CARGAR DIRECTAMENTE DESDE JSON
+def cargar_personajes_desde_json():
+    """Cargar personajes directamente desde el archivo JSON"""
+    try:
+        with open('personajes.json', 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            personajes = data.get('personajes', [])
+            print(f"✅ Cargados {len(personajes)} personajes desde personajes.json")
+            return personajes
+    except FileNotFoundError:
+        print("❌ personajes.json no encontrado. Creando archivo de ejemplo...")
+        # Crear archivo de ejemplo
+        datos_ejemplo = {
+            "personajes": [
+                {
+                    "id": "ejemplo_001",
+                    "nombre": "Naruto Uzumaki",
+                    "serie": "Naruto", 
+                    "rareza": "comun",
+                    "image_url": "https://example.com/naruto.jpg",
+                    "descripcion": "Ejemplo - modificar personajes.json"
+                }
+            ]
+        }
+        with open('personajes.json', 'w', encoding='utf-8') as f:
+            json.dump(datos_ejemplo, f, indent=2, ensure_ascii=False)
+        return datos_ejemplo['personajes']
+    except Exception as e:
+        print(f"❌ Error cargando personajes: {e}")
+        return []
+
+ANIME_CHARACTERS = cargar_personajes_desde_json()
+
+
+def recargar_personajes():
+    """Recargar personajes (útil si modificas el JSON con el bot encendido)"""
+    global ANIME_CHARACTERS
+    ANIME_CHARACTERS = cargar_personajes_desde_json()
+    return len(ANIME_CHARACTERS)
+    
+def recargar_items():
+	global GACHA_ITEMS
+	GACHA_ITEMS = cargar_items_desde_json()
+	return len(GACHA_ITEMS)
+	
+@bot.command(name='recargar_p')
+async def recargar_p(ctx):
+    """Recargar personajes desde JSON"""
+    try:
+        cantidad = recargar_personajes()
+        cantidad_items = recargar_items()
+        await ctx.send(f" Recargados {cantidad} personajes y {cantidad_items} Categorías de articulos de ≈50c/u")
+    except Exception as e:
+        await ctx.send(f"❌ Error: {e}")
+        
+        
+class AnimeGachaSystem:
+    """Sistema de gacha para personajes de anime - CORREGIDO"""
+    
+    def __init__(self):
+        self.data_file = 'anime_gacha_data.json'
+        self._cache = {}
+        self._lock = asyncio.Lock()
+        self._load_data()
+    
+    def _load_data(self):
+        """Cargar datos desde JSON - CORREGIDO"""
+        try:
+            if os.path.exists(self.data_file):
+                with open(self.data_file, 'r', encoding='utf-8') as f:
+                    self._cache = json.load(f)
+                    # Convertir lists de vuelta a sets
+                    for user_id, user_data in self._cache.get("users", {}).items():
+                        if "personajes_unicos" in user_data and isinstance(user_data["personajes_unicos"], list):
+                            user_data["personajes_unicos"] = set(user_data["personajes_unicos"])
+            else:
+                self._cache = {
+                    "users": {},
+                    "global_stats": {
+                        "total_invocaciones": 0,
+                        "personajes_obtenidos": {},
+                        "ultimo_mitico": None
+                    },
+                    "mercado": []
+                }
+                self._save_data()
+        except Exception as e:
+            print(f"❌ Error cargando datos gacha: {e}")
+            self._cache = {
+                "users": {}, 
+                "global_stats": {"total_invocaciones": 0, "personajes_obtenidos": {}, "ultimo_mitico": None}, 
+                "mercado": []
+            }
+    
+    def _save_data(self):
+        try:
+            # Crear copia para serialización segura
+            cache_to_save = json.loads(json.dumps(self._cache, default=self._json_serializer))
+            with open(self.data_file, 'w', encoding='utf-8') as f:
+                json.dump(cache_to_save, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"❌ Error guardando datos gacha: {e}")
+    
+    def _json_serializer(self, obj):
+        """Serializador personalizado para tipos no serializables"""
+        if isinstance(obj, set):
+            return list(obj)
+        raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+    
+    async def _atomic_operation(self, operation):
+        """Ejecutar operación atómicamente con lock"""
+        async with self._lock:
+            try:
+                result = await operation()
+                asyncio.create_task(self._async_save())
+                return result
+            except Exception as e:
+                print(f"❌ Error en operación atómica gacha: {e}")
+                raise
+    
+    async def _async_save(self):
+        """Guardar de forma asíncrona"""
+        await asyncio.get_event_loop().run_in_executor(None, self._save_data)
+    
+    def get_user_data(self, user_id: str):
+        """Obtener datos de usuario de forma segura - CORREGIDO"""
+        user_id_str = str(user_id)
+        if user_id_str not in self._cache["users"]:
+            self._cache["users"][user_id_str] = {
+                "amuleto": GACHA_CONFIG['starting_amuleto'],
+                "personajes": [],
+                "ultimo_claim": None,
+                "total_invocaciones": 0,
+                "personajes_unicos": set(),  # Set internamente
+                "historial_invocaciones": []
+            }
+        return self._cache["users"][user_id_str]
+    
+    def get_rarity(self):
+        """Obtener rareza basada en probabilidades"""
+        rand = random.random() * 100
+        cumulative = 0
+        
+        for rarity, data in ANIME_RARITY_SYSTEM.items():
+            cumulative += data["prob"]
+            if rand <= cumulative:
+                return rarity
+        
+        return "comun"
+    
+    def get_random_character(self, rarity: str):
+        """Obtener personaje aleatorio de una rareza específica"""
+        available_chars = [char for char in ANIME_CHARACTERS if char["rareza"] == rarity]
+        
+        if available_chars:
+            char = random.choice(available_chars).copy()
+            char["unique_id"] = str(uuid.uuid4())[:8]
+            char["obtenido_en"] = datetime.now().isoformat()
+            char["ultimo_claim"] = None
+            return char
+        else:
+            return {
+                "id": f"fallback_{rarity}",
+                "unique_id": str(uuid.uuid4())[:8],
+                "nombre": f"Personaje {rarity.capitalize()}",
+                "serie": "Sistema",
+                "rareza": rarity,
+                "image_url": None,
+                "descripcion": f"Un personaje misterioso de rareza {rarity}",
+                "obtenido_en": datetime.now().isoformat(),
+                "ultimo_claim": None
+            }
+    
+    async def invocar_personaje(self, user_id: str, use_amuleto: bool = True):
+        """Realizar una invocación de personaje"""
+        async def operation():
+            user_data = self.get_user_data(user_id)
+            
+            if use_amuleto:
+                if user_data["amuleto"] < 1:
+                    return None, "❌ No tienes amuletos de invocación"
+                user_data["amuleto"] -= 1
+            else:
+                user_economy_data = economy_system.get_user_data(user_id)
+                if user_economy_data["monedas"] < GACHA_CONFIG['amuleto_cost']:
+                    return None, f"❌ No tienes suficientes monedas. Necesitas {GACHA_CONFIG['amuleto_cost']}"
+                user_economy_data["monedas"] -= GACHA_CONFIG['amuleto_cost']
+            
+            if len(user_data["personajes"]) >= GACHA_CONFIG['max_inventory_size']:
+                return None, "❌ Tu inventario de personajes está lleno"
+            
+            rarity = self.get_rarity()
+            character = self.get_random_character(rarity)
+            
+            user_data["personajes"].append(character)
+            user_data["total_invocaciones"] += 1
+            user_data["personajes_unicos"].add(character["id"])
+            user_data["historial_invocaciones"].append({
+                "character_id": character["id"],
+                "timestamp": datetime.now().isoformat(),
+                "rareza": rarity
+            })
+            
+            user_data["historial_invocaciones"] = user_data["historial_invocaciones"][-50:]
+            
+            self._cache["global_stats"]["total_invocaciones"] += 1
+            self._cache["global_stats"]["personajes_obtenidos"][character["id"]] = \
+                self._cache["global_stats"]["personajes_obtenidos"].get(character["id"], 0) + 1
+            
+            if rarity == "mitico":
+                self._cache["global_stats"]["ultimo_mitico"] = {
+                    "user_id": user_id,
+                    "character": character["nombre"],
+                    "timestamp": datetime.now().isoformat()
+                }
+            
+            return character, f"🎉 ¡Has invocado a {character['nombre']}!"
+        
+        return await self._atomic_operation(operation)
+    
+    async def claim_coins(self, user_id: str):
+        """Reclamar monedas de los personajes - CORREGIDO"""
+        async def operation():
+            user_data = self.get_user_data(user_id)
+            now = datetime.now()
+            
+            if user_data["ultimo_claim"]:
+                last_claim = datetime.fromisoformat(user_data["ultimo_claim"])
+                if now - last_claim < timedelta(hours=23):  # CORREGIDO: timedelta importado
+                    next_claim = last_claim + timedelta(hours=24)
+                    time_left = next_claim - now
+                    hours = int(time_left.seconds / 3600)
+                    minutes = int((time_left.seconds % 3600) / 60)
+                    return None, f"⏰ Ya reclamaste hoy. Podrás reclamar nuevamente en {hours}h {minutes}m"
+            
+            total_coins = 0
+            characters_claimed = 0
+            
+            for character in user_data["personajes"]:
+                if not character["ultimo_claim"]:
+                    can_claim = True
+                else:
+                    last_claim = datetime.fromisoformat(character["ultimo_claim"])
+                    can_claim = (now - last_claim) >= timedelta(days=GACHA_CONFIG['claim_cooldown_days'])
+                
+                if can_claim:
+                    rarity_multiplier = ANIME_RARITY_SYSTEM[character["rareza"]]["coin_multiplier"]
+                    coins_earned = int(GACHA_CONFIG['coins_per_week'] * rarity_multiplier)
+                    total_coins += coins_earned
+                    characters_claimed += 1
+                    character["ultimo_claim"] = now.isoformat()
+            
+            if total_coins > 0:
+                user_data["ultimo_claim"] = now.isoformat()
+                await economy_system.add_coins(user_id, total_coins)
+                return total_coins, characters_claimed
+            else:
+                return None, "❌ No hay personajes listos para reclamar monedas"
+        
+        return await self._atomic_operation(operation)
+    
+    async def add_amuleto(self, user_id: str, amount: int = 1):
+        """Añadir amuletos a un usuario"""
+        async def operation():
+            user_data = self.get_user_data(user_id)
+            user_data["amuleto"] += amount
+            return user_data["amuleto"]
+        
+        return await self._atomic_operation(operation)
+    
+    async def get_user_stats(self, user_id: str):
+        """Obtener estadísticas del usuario"""
+        user_data = self.get_user_data(user_id)
+        
+        rarity_dist = {}
+        for character in user_data["personajes"]:
+            rareza = character["rareza"]
+            rarity_dist[rareza] = rarity_dist.get(rareza, 0) + 1
+        
+        ready_for_claim = 0
+        now = datetime.now()
+        
+        for character in user_data["personajes"]:
+            if not character["ultimo_claim"]:
+                ready_for_claim += 1
+            else:
+                last_claim = datetime.fromisoformat(character["ultimo_claim"])
+                if (now - last_claim) >= timedelta(days=GACHA_CONFIG['claim_cooldown_days']):
+                    ready_for_claim += 1
+        
+        return {
+            "total_personajes": len(user_data["personajes"]),
+            "personajes_unicos": len(user_data["personajes_unicos"]),
+            "total_invocaciones": user_data["total_invocaciones"],
+            "amuleto": user_data["amuleto"],
+            "rarity_dist": rarity_dist,
+            "ready_for_claim": ready_for_claim,
+            "ultimo_claim": user_data["ultimo_claim"]
+        }
+
+    def get_character_by_id(self, user_id: str, character_unique_id: str):
+        """Obtener un personaje específico por su ID único"""
+        user_data = self.get_user_data(user_id)
+        for character in user_data["personajes"]:
+            if character.get("unique_id") == character_unique_id:
+                return character
+        return None
+
+    async def transferir_personaje(self, from_user_id: str, to_user_id: str, character_unique_id: str):
+        """Transferir personaje entre usuarios"""
+        async def operation():
+            from_user = self.get_user_data(from_user_id)
+            to_user = self.get_user_data(to_user_id)
+            
+            character_index = None
+            character_to_transfer = None
+            
+            for i, character in enumerate(from_user["personajes"]):
+                if character.get("unique_id") == character_unique_id:
+                    character_index = i
+                    character_to_transfer = character
+                    break
+            
+            if character_index is None:
+                return False, "❌ Personaje no encontrado en tu colección"
+            
+            if len(to_user["personajes"]) >= GACHA_CONFIG['max_inventory_size']:
+                return False, "❌ La colección del destinatario está llena"
+            
+            from_user["personajes"].pop(character_index)
+            to_user["personajes"].append(character_to_transfer)
+            
+            return True, "✅ Personaje transferido exitosamente"
+        
+        return await self._atomic_operation(operation)
+
+    async def vender_publico(self, user_id: str, character_unique_id: str, precio: int):
+        """Poner personaje en venta pública"""
+        async def operation():
+            user_data = self.get_user_data(user_id)
+            
+            character_index = None
+            character_to_sell = None
+            
+            for i, character in enumerate(user_data["personajes"]):
+                if character.get("unique_id") == character_unique_id:
+                    character_index = i
+                    character_to_sell = character
+                    break
+            
+            if character_index is None:
+                return False, "❌ Personaje no encontrado en tu colección"
+            
+            if precio < 1:
+                return False, "❌ El precio debe ser al menos 1 moneda"
+            
+            venta_id = str(uuid.uuid4())[:8]
+            venta = {
+                "venta_id": venta_id,
+                "vendedor_id": user_id,
+                "character": character_to_sell,
+                "precio": precio,
+                "fecha_publicacion": datetime.now().isoformat()
+            }
+            
+            user_data["personajes"].pop(character_index)
+            self._cache["mercado"].append(venta)
+            
+            return True, venta_id
+        
+        return await self._atomic_operation(operation)
+
+    async def comprar_publico(self, user_id: str, venta_id: str):
+        """Comprar personaje del mercado público"""
+        async def operation():
+            user_data = self.get_user_data(user_id)
+            mercado = self._cache["mercado"]
+            
+            venta_index = None
+            venta_seleccionada = None
+            
+            for i, venta in enumerate(mercado):
+                if venta["venta_id"] == venta_id:
+                    venta_index = i
+                    venta_seleccionada = venta
+                    break
+            
+            if venta_index is None:
+                return False, "❌ Venta no encontrada en el mercado"
+            
+            if venta_seleccionada["vendedor_id"] == user_id:
+                return False, "❌ No puedes comprar tu propio personaje"
+            
+            if len(user_data["personajes"]) >= GACHA_CONFIG['max_inventory_size']:
+                return False, "❌ Tu inventario de personajes está lleno"
+            
+            user_economy_data = economy_system.get_user_data(user_id)
+            if user_economy_data["monedas"] < venta_seleccionada["precio"]:
+                return False, f"❌ No tienes suficientes monedas. Necesitas {venta_seleccionada['precio']}"
+            
+            user_economy_data["monedas"] -= venta_seleccionada["precio"]
+            vendedor_economy_data = economy_system.get_user_data(venta_seleccionada["vendedor_id"])
+            vendedor_economy_data["monedas"] += venta_seleccionada["precio"]
+            
+            user_data["personajes"].append(venta_seleccionada["character"])
+            mercado.pop(venta_index)
+            
+            return True, venta_seleccionada["character"]
+        
+        return await self._atomic_operation(operation)
+
+    def get_mercado(self, page: int = 1):
+        """Obtener items del mercado paginados"""
+        mercado = self._cache["mercado"]
+        
+        items_per_page = 5
+        start_idx = (page - 1) * items_per_page
+        end_idx = start_idx + items_per_page
+        
+        paginated_items = mercado[start_idx:end_idx]
+        total_pages = max(1, (len(mercado) + items_per_page - 1) // items_per_page)
+        
+        return paginated_items, total_pages, len(mercado)
+
+# Instancia global del sistema gacha
+anime_gacha_system = AnimeGachaSystem()
+
+# ============ COMANDOS ============
+
 @bot.command(name='gacha')
 async def gacha(ctx):
-    """Comando para usar el sistema gacha - CORREGIDO"""
+    """Usar el sistema gacha"""
     try:
-        # Mostrar embed de confirmación
         embed = discord.Embed(
             title="🎰 Sistema Gacha",
             description=(
@@ -1640,27 +2634,24 @@ async def gacha(ctx):
         
         view = View()
         confirm_button = Button(label="🎰 ¡Jugar!", style=discord.ButtonStyle.success)
-        cancel_button = Button(label="❌ Cancelar", style=discord.ButtonStyle.danger)
         
         async def confirm_callback(interaction):
             if interaction.user.id != ctx.author.id:
                 await interaction.response.send_message("❌ Este menú no es para ti", ephemeral=True)
                 return
             
-            # CORREGIDO: Usar interaction.user.id en lugar de ctx.author.id
             result = await economy_system.gacha_pull(str(interaction.user.id))
             
             if result is None:
                 await interaction.response.send_message("❌ Error en el sistema gacha", ephemeral=True)
                 return
             
-            item, message = result  # CORREGIDO: Desempaquetar el resultado
+            item, message = result
             
             if item is None:
                 await interaction.response.send_message(message, ephemeral=True)
                 return
             
-            # Crear embed del resultado
             rarity_color = RARITY_SYSTEM[item["rareza"]]["color"]
             embed_result = discord.Embed(
                 title=f"🎉 ¡{item['nombre']}!",
@@ -1673,13 +2664,12 @@ async def gacha(ctx):
                 color=rarity_color
             )
             
-            # Añadir emoji según rareza
             rarity_emojis = {
-                "comun": "⚪",
-                "raro": "🔵", 
-                "epico": "🟣",
-                "legendario": "🟠",
-                "mitico": "🟡"
+                "comun": "🪨",
+                "raro": "💎", 
+                "epico": "💠",
+                "legendario": "⚜️",
+                "mitico": "👑"
             }
             
             embed_result.set_author(
@@ -1695,17 +2685,180 @@ async def gacha(ctx):
             await interaction.response.send_message("❌ Gacha cancelado", ephemeral=True)
         
         confirm_button.callback = confirm_callback
-        cancel_button.callback = cancel_callback
         
         view.add_item(confirm_button)
-        view.add_item(cancel_button)
         
         await ctx.send(embed=embed, view=view)
         
     except Exception as e:
-        logger.error(f"Error en comando gacha: {e}")
+        print(f"Error en comando gacha: {e}")
         await ctx.send("❌ Error al usar el gacha")
 
+
+
+@bot.command(name='invocar')
+async def invocar(ctx, usar_monedas: str = "amuleto"):
+    """Invocar un personaje de anime"""
+    try:
+        use_amuleto = usar_monedas.lower() in ["amuleto", "amu", "a"]
+        
+        if use_amuleto:
+            embed = discord.Embed(
+                title="🌠 Invocación de Personaje",
+                description=(
+                    "**Costo:** 1 Amuleto de Invocación\n\n"
+                    "**Probabilidades:**\n"
+                    "• Común: 55%\n• Raro: 30%\n• Épico: 10%\n• Legendario: 4%\n• Mítico: 1%\n\n"
+                    "¿Quieres realizar la invocación?"
+                ),
+                color=0xe91e63
+            )
+        else:
+            embed = discord.Embed(
+                title="🌠 Invocación de Personaje",
+                description=(
+                    f"**Costo:** {GACHA_CONFIG['amuleto_cost']} monedas\n\n"
+                    "**Probabilidades:**\n"
+                    "• Común: 55%\n• Raro: 30%\n• Épico: 10%\n• Legendario: 4%\n• Mítico: 1%\n\n"
+                    "¿Quieres realizar la invocación?"
+                ),
+                color=0xe91e63
+            )
+        
+        view = View()
+        confirm_button = Button(label="✨ ¡Invocar!", style=discord.ButtonStyle.success, emoji="🌠")
+        async def confirm_callback(interaction):
+            if interaction.user.id != ctx.author.id:
+                await interaction.response.send_message("❌ Este menú no es para ti", ephemeral=True)
+                return
+            
+            result = await anime_gacha_system.invocar_personaje(str(interaction.user.id), use_amuleto)
+            
+            if result is None:
+                await interaction.response.send_message("❌ Error en el sistema de invocación", ephemeral=True)
+                return
+            
+            character, message = result
+            
+            if character is None:
+                await interaction.response.send_message(message, ephemeral=True)
+                return
+            
+            rarity_data = ANIME_RARITY_SYSTEM[character["rareza"]]
+            embed_result = discord.Embed(
+                title=f"🎉 ¡{character['nombre']}!",
+                description=(
+                    f"**Serie:** {character['serie']}\n"
+                    f"**Rareza:** {character['rareza'].upper()}\n"
+                    f"**Monedas/semana:** {int(GACHA_CONFIG['coins_per_week'] * rarity_data['coin_multiplier'])}\n\n"
+                    f"*ID: `{character['unique_id']}`*"
+                ),
+                color=rarity_data["color"]
+            )
+            
+            if character.get("image_url"):
+                embed_result.set_thumbnail(url=character["image_url"])
+            
+            embed_result.set_author(
+                name=f"{rarity_data['emoji']} ¡Nuevo personaje obtenido!",
+                icon_url=interaction.user.display_avatar.url
+            )
+            
+            if character["rareza"] == "mitico":
+                embed_result.set_footer(text="⭐ ¡PERSONAJE MÍTICO! ⭐")
+            elif character["rareza"] == "legendario":
+                embed_result.set_footer(text="**🌠 ¡PERSONAJE LEGENDARIO! 🌠**")
+            
+            await interaction.response.send_message(embed=embed_result)
+        
+        async def cancel_callback(interaction):
+            if interaction.user.id != ctx.author.id:
+                await interaction.response.send_message("❌ Este menú no es para ti", ephemeral=True)
+                return
+            await interaction.response.send_message("❌ Invocación cancelada", ephemeral=True)
+        
+        confirm_button.callback = confirm_callback
+        
+        view.add_item(confirm_button)
+        
+        await ctx.send(embed=embed, view=view)
+        
+    except Exception as e:
+        print(f"Error en comando invocar: {e}")
+        await ctx.send("❌ Error al realizar la invocación")
+
+
+#
+
+@bot.command(name='claim')
+async def claim(ctx):
+    """Reclamar monedas de los personajes"""
+    try:
+        result = await anime_gacha_system.claim_coins(str(ctx.author.id))
+        
+        if result is None:
+            await ctx.send("❌ Error en el sistema de claim")
+            return
+        
+        if isinstance(result, tuple) and len(result) == 2:
+            total_coins, characters_claimed = result
+            
+            if total_coins is None or total_coins == 0:
+                description = (
+                    f"**Monedas obtenidas:** 0 💰\n"
+                    f"{characters_claimed} 🌠\n\n"
+                    f"No obtuviste monedas esta vez... \n"
+                    f"¡Vuelve en una semana para reclamar nuevamente!"
+                )
+            else:
+                description = (
+                    f"**Monedas obtenidas:** {total_coins} 💰\n"
+                    f"**Personajes que pagaron:** {characters_claimed} 🌠\n\n"
+                    f"**Monedas añadidas a tu cuenta principal** 💫\n"
+                    f"¡Vuelve en una semana para reclamar nuevamente!"
+                )
+
+            embed = discord.Embed(
+                title="💰 Recompensas Reclamadas",
+                description=description,
+                color=0x00ff88
+            )
+            
+            user_stats = await anime_gacha_system.get_user_stats(str(ctx.author.id))
+            user_economy_data = economy_system.get_user_data(str(ctx.author.id))
+            
+            embed.add_field(
+                name="📊 Estado Actual",
+                value=(
+                    f"**Monedas totales:** {user_economy_data['monedas']}\n"
+                    f"**Amuletos de invocación:** {user_stats['amuleto']}\n"
+                    f"**Personajes en espera:** {user_stats['ready_for_claim']}/{user_stats['total_personajes']}"
+                ),
+                inline=True
+            )
+            
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send(result)
+            
+    except Exception as e:
+        print(f"Error en comando claim: {e}")
+        await ctx.send("❌ Error al reclamar monedas")
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+#inventario
 @bot.command(name='inventario')
 async def inventario(ctx, pagina: int = 1):
     """Ver tu inventario"""
@@ -1722,20 +2875,18 @@ async def inventario(ctx, pagina: int = 1):
             await ctx.send(embed=embed)
             return
         
-        # Crear embed del inventario
         embed = discord.Embed(
-            title=f"🎒 Inventario de {ctx.author.mention}",#display_name → mention
+            title=f"🎒 Inventario de {ctx.author.display_name}",
             description=f"**Monedas:** {user_data['monedas']} | **Total items:** {total_items}",
             color=0x3498db
         )
         
-        # Añadir items a la página actual
         for i, item in enumerate(items, start=(pagina-1)*10 + 1):
-            emoji = {"comun": "⚪", "raro": "🔵", "epico": "🟣", "legendario": "🟠", "mitico": "🟡"}.get(item["rareza"], "⚪")
+            emoji = {"comun": "🪨", "raro": "💠", "epico": "💎", "legendario": "⚜️", "mitico": "💠⚜️💠"}.get(item["rareza"], "⚪")
             embed.add_field(
                 name=f"{emoji} {item['nombre']}",
                 value=(
-                    #f"**Tipo:** {item['tipo']}\n"
+                    f"**Tipo:** {item['tipo']}\n"
                     f"**Rareza:** {item['rareza'].title()}\n"
                     f"**Valor:** {item['valor']} monedas\n"
                     f"**ID:** `{item['unique_id']}`"
@@ -1748,66 +2899,8 @@ async def inventario(ctx, pagina: int = 1):
         await ctx.send(embed=embed)
         
     except Exception as e:
-        logger.error(f"Error en comando inventario: {e}")
+        print(f"Error en comando inventario: {e}")
         await ctx.send("❌ Error al ver el inventario")
-
-@bot.command(name='transferir')
-async def transferir(ctx, usuario: discord.Member, item_id: str):
-    """Transferir item a otro usuario"""
-    try:
-        if usuario.id == ctx.author.id:
-            await ctx.send("❌ No puedes transferir items a ti mismo")
-            return
-        
-        result = await economy_system.transfer_item(str(ctx.author.id), str(usuario.id), item_id)
-        
-        if result is None:
-            await ctx.send("❌ Error en el sistema de transferencia")
-            return
-        
-        success, message = result
-        
-        if success:
-            embed = discord.Embed(
-                title="✅ Item Transferido",
-                description=f"Has transferido un item a {usuario.mention}",
-                color=0x2ecc71
-            )
-            await ctx.send(embed=embed)
-        else:
-            await ctx.send(message)
-            
-    except Exception as e:
-        logger.error(f"Error en comando transferir: {e}")
-        await ctx.send("❌ Error al transferir el item")
-
-@bot.command(name='vender')
-async def vender(ctx, item_id: str):
-    """Vender item por monedas"""
-    try:
-        result = await economy_system.sell_item(str(ctx.author.id), item_id)
-        
-        if result is None:
-            await ctx.send("❌ Error en el sistema de venta")
-            return
-        
-        success, message = result
-        
-        if success:
-            # Obtener datos actualizados
-            user_data = economy_system.get_user_data(str(ctx.author.id))
-            embed = discord.Embed(
-                title="💰 Item Vendido",
-                description=f"{message}\n\n**Monedas actuales:** {user_data['monedas']}",
-                color=0xf39c12
-            )
-            await ctx.send(embed=embed)
-        else:
-            await ctx.send(message)
-            
-    except Exception as e:
-        logger.error(f"Error en comando vender: {e}")
-        await ctx.send("❌ Error al vender el item")
 
 @bot.command(name='diario')
 async def diario(ctx):
@@ -1837,24 +2930,22 @@ async def diario(ctx):
             await ctx.send(message)
             
     except Exception as e:
-        logger.error(f"Error en comando diario: {e}")
+        print(f"Error en comando diario: {e}")
         await ctx.send("❌ Error al reclamar recompensa diaria")
-
+#
 @bot.command(name='perfil')
 async def perfil(ctx, usuario: discord.Member = None):
-    """Ver perfil económico de un usuario"""
+    """Ver perfil económico"""
     try:
         if usuario is None:
             usuario = ctx.author
         
         user_data = economy_system.get_user_data(str(usuario.id))
         
-        # Calcular estadísticas
         total_items = len(user_data["inventario"])
         personajes_unicos = len(set(user_data["personajes_obtenidos"]))
         total_gachas = user_data.get("total_gachas", 0)
         
-        # Calcular distribución de rarezas
         rarity_dist = {}
         for item in user_data["inventario"]:
             rareza = item["rareza"]
@@ -1885,7 +2976,6 @@ async def perfil(ctx, usuario: discord.Member = None):
             inline=True
         )
         
-        # Añadir distribución de rarezas
         if rarity_dist:
             rarity_text = "\n".join([
                 f"**{rareza.title()}:** {count}"
@@ -1899,504 +2989,8 @@ async def perfil(ctx, usuario: discord.Member = None):
         await ctx.send(embed=embed)
         
     except Exception as e:
-        logger.error(f"Error en comando perfil: {e}")
+        print(f"Error en comando perfil: {e}")
         await ctx.send("❌ Error al ver el perfil")
-
-@bot.command(name='economia')
-async def economia(ctx):
-    """Información del sistema económico"""
-    embed = discord.Embed(
-        title="💎 Sistema Económico - Guía",
-        description="Todos los comandos disponibles para el sistema económico:",
-        color=0x00ff88
-    )
-    
-    embed.add_field(
-        name="🎰 Gacha System",
-        value=(
-            "`!gacha` - Usar el sistema gacha (50 monedas)\n"
-            "`!diario` - Reclamar recompensa diaria (100 monedas)\n"
-            "`!perfil` - Ver tu perfil económico"
-        ),
-        inline=False
-    )
-    
-    embed.add_field(
-        name="🎒 Gestión de Items",
-        value=(
-            "`!inventario [página]` - Ver tu inventario\n"
-            "`!vender <item_id>` - Vender un item\n"
-            "`!transferir @usuario <item_id>` - Transferir item"
-        ),
-        inline=False
-    )
-    
-    embed.add_field(
-        name="📊 Estadísticas",
-        value=(
-            f"**Monedas iniciales:** {ECONOMY_CONFIG['starting_coins']}\n"
-            f"**Costo gacha:** {ECONOMY_CONFIG['gacha_cost']} monedas\n"
-            f"**Recompensa diaria:** {ECONOMY_CONFIG['daily_coins']} monedas\n"
-            f"**Capacidad inventario:** {ECONOMY_CONFIG['max_inventory_size']} items"
-        ),
-        inline=False
-    )
-    
-    embed.set_footer(text="¡Diviértete coleccionando!")
-    
-    await ctx.send(embed=embed)
-
-
-#_________gacha 2????????????
-import json
-import random
-import os
-import asyncio
-from datetime import datetime, timedelta
-import uuid
-
-# ============ SISTEMA DE GACHA ANIME ============
-GACHA_CONFIG = {
-    'amuleto_cost': 1000,  # Costo en monedas normales
-    'coins_per_week': 50,  # Monedas por personaje cada semana
-    'claim_cooldown_days': 7,
-    'starting_amuleto': 1,
-    'max_inventory_size': 200
-}
-
-# Sistema de rarezas para personajes de anime
-ANIME_RARITY_SYSTEM = {
-    "comun": {"prob": 55, "color": 0x808080, "coin_multiplier": 1.0, "emoji": "⚪"},
-    "raro": {"prob": 30, "color": 0x0070DD, "coin_multiplier": 1.5, "emoji": "🔵"},
-    "epico": {"prob": 10, "color": 0xA335EE, "coin_multiplier": 2.0, "emoji": "🟣"},
-    "legendario": {"prob": 4, "color": 0xFF8000, "coin_multiplier": 3.0, "emoji": "🟠"},
-    "mitico": {"prob": 1, "color": 0xE6CC80, "coin_multiplier": 5.0, "emoji": "🟡"}
-}
-
-# Base de datos de personajes de anime
-ANIME_CHARACTERS = [
-    # COMUNES
-    {"id": "naruto_001", "nombre": "Naruto Uzumaki", "serie": "Naruto", "rareza": "comun", "image_url": "https://example.com/naruto.jpg"},
-    {"id": "luffy_001", "nombre": "Monkey D. Luffy", "serie": "One Piece", "rareza": "comun", "image_url": "https://example.com/luffy.jpg"},
-    {"id": "goku_001", "nombre": "Son Goku", "serie": "Dragon Ball", "rareza": "comun", "image_url": "https://example.com/goku.jpg"},
-    {"id": "sakura_001", "nombre": "Sakura Haruno", "serie": "Naruto", "rareza": "comun", "image_url": "https://example.com/sakura.jpg"},
-    {"id": "usopp_001", "nombre": "Usopp", "serie": "One Piece", "rareza": "comun", "image_url": "https://example.com/usopp.jpg"},
-    
-    # RAROS
-    {"id": "sasuke_001", "nombre": "Sasuke Uchiha", "serie": "Naruto", "rareza": "raro", "image_url": "https://example.com/sasuke.jpg"},
-    {"id": "zoro_001", "nombre": "Roronoa Zoro", "serie": "One Piece", "rareza": "raro", "image_url": "https://example.com/zoro.jpg"},
-    {"id": "vegeta_001", "nombre": "Vegeta", "serie": "Dragon Ball", "rareza": "raro", "image_url": "https://example.com/vegeta.jpg"},
-    {"id": "levi_001", "nombre": "Levi Ackerman", "serie": "Attack on Titan", "rareza": "raro", "image_url": "https://example.com/levi.jpg"},
-    
-    # EPICOS
-    {"id": "itachi_001", "nombre": "Itachi Uchiha", "serie": "Naruto", "rareza": "epico", "image_url": "https://example.com/itachi.jpg"},
-    {"id": "ace_001", "nombre": "Portgas D. Ace", "serie": "One Piece", "rareza": "epico", "image_url": "https://example.com/ace.jpg"},
-    {"id": "gojo_001", "nombre": "Satoru Gojo", "serie": "Jujutsu Kaisen", "rareza": "epico", "image_url": "https://example.com/gojo.jpg"},
-    {"id": "rem_001", "nombre": "Rem", "serie": "Re:Zero", "rareza": "epico", "image_url": "https://example.com/rem.jpg"},
-    
-    # LEGENDARIOS
-    {"id": "madara_001", "nombre": "Madara Uchiha", "serie": "Naruto", "rareza": "legendario", "image_url": "https://example.com/madara.jpg"},
-    {"id": "shanks_001", "nombre": "Shanks", "serie": "One Piece", "rareza": "legendario", "image_url": "https://example.com/shanks.jpg"},
-    {"id": "guts_001", "nombre": "Guts", "serie": "Berserk", "rareza": "legendario", "image_url": "https://example.com/guts.jpg"},
-    
-    # MITICOS
-    {"id": "saitama_001", "nombre": "Saitama", "serie": "One Punch Man", "rareza": "mitico", "image_url": "https://example.com/saitama.jpg"},
-    {"id": "light_001", "nombre": "Light Yagami", "serie": "Death Note", "rareza": "mitico", "image_url": "https://example.com/light.jpg"},
-    {"id": "l_001", "nombre": "L Lawliet", "serie": "Death Note", "rareza": "mitico", "image_url": "https://example.com/l.jpg"}
-]
-
-class AnimeGachaSystem:
-    """Sistema de gacha para personajes de anime con amuletos y reclamación"""
-    
-    def __init__(self):
-        self.data_file = 'anime_gacha_data.json'
-        self._cache = {}
-        self._lock = asyncio.Lock()
-        self._load_data()
-    
-    def _load_data(self):
-        """Cargar datos desde JSON"""
-        try:
-            if os.path.exists(self.data_file):
-                with open(self.data_file, 'r', encoding='utf-8') as f:
-                    self._cache = json.load(f)
-            else:
-                self._cache = {
-                    "users": {},
-                    "global_stats": {
-                        "total_invocaciones": 0,
-                        "personajes_obtenidos": {},
-                        "ultimo_mitico": None
-                    }
-                }
-                self._save_data()
-        except Exception as e:
-            print(f"❌ Error cargando datos gacha: {e}")
-            self._cache = {"users": {}, "global_stats": {"total_invocaciones": 0, "personajes_obtenidos": {}, "ultimo_mitico": None}}
-    
-    def _save_data(self):
-        """Guardar datos a JSON"""
-        try:
-            with open(self.data_file, 'w', encoding='utf-8') as f:
-                json.dump(self._cache, f, indent=2, ensure_ascii=False)
-        except Exception as e:
-            print(f"❌ Error guardando datos gacha: {e}")
-    
-    async def _atomic_operation(self, operation):
-        """Ejecutar operación atómicamente con lock"""
-        async with self._lock:
-            try:
-                result = await operation()
-                asyncio.create_task(self._async_save())
-                return result
-            except Exception as e:
-                print(f"❌ Error en operación atómica gacha: {e}")
-                raise
-    
-    async def _async_save(self):
-        """Guardar de forma asíncrona"""
-        await asyncio.get_event_loop().run_in_executor(None, self._save_data)
-    
-    def get_user_data(self, user_id: str):
-        """Obtener datos de usuario de forma segura"""
-        user_id_str = str(user_id)
-        if user_id_str not in self._cache["users"]:
-            self._cache["users"][user_id_str] = {
-                "amuleto": GACHA_CONFIG['starting_amuleto'],
-                "monedas_gacha": 0,
-                "personajes": [],
-                "ultimo_claim": None,
-                "total_invocaciones": 0,
-                "personajes_unicos": set(),
-                "historial_invocaciones": []
-            }
-        return self._cache["users"][user_id_str]
-    
-    def get_rarity(self):
-        """Obtener rareza basada en probabilidades"""
-        rand = random.random() * 100
-        cumulative = 0
-        
-        for rarity, data in ANIME_RARITY_SYSTEM.items():
-            cumulative += data["prob"]
-            if rand <= cumulative:
-                return rarity
-        
-        return "comun"
-    
-    def get_random_character(self, rarity: str):
-        """Obtener personaje aleatorio de una rareza específica"""
-        available_chars = [char for char in ANIME_CHARACTERS if char["rareza"] == rarity]
-        
-        if available_chars:
-            char = random.choice(available_chars).copy()
-            char["unique_id"] = str(uuid.uuid4())[:8]
-            char["obtenido_en"] = datetime.now().isoformat()
-            char["ultimo_claim"] = None  # Fecha del último reclamo de monedas
-            return char
-        else:
-            # Fallback: crear personaje genérico
-            return {
-                "id": f"fallback_{rarity}",
-                "unique_id": str(uuid.uuid4())[:8],
-                "nombre": f"Personaje {rarity.capitalize()}",
-                "serie": "Sistema",
-                "rareza": rarity,
-                "image_url": None,
-                "obtenido_en": datetime.now().isoformat(),
-                "ultimo_claim": None
-            }
-    
-    async def invocar_personaje(self, user_id: str, use_amuleto: bool = True):
-        """Realizar una invocación de personaje"""
-        async def operation():
-            user_data = self.get_user_data(user_id)
-            
-            if use_amuleto:
-                # Verificar amuletos
-                if user_data["amuleto"] < 1:
-                    return None, "❌ No tienes amuletos de invocación"
-                user_data["amuleto"] -= 1
-            else:
-                # Verificar monedas normales (usando el sistema económico existente)
-                user_economy_data = economy_system.get_user_data(user_id)
-                if user_economy_data["monedas"] < GACHA_CONFIG['amuleto_cost']:
-                    return None, f"❌ No tienes suficientes monedas. Necesitas {GACHA_CONFIG['amuleto_cost']}"
-                user_economy_data["monedas"] -= GACHA_CONFIG['amuleto_cost']
-            
-            # Verificar espacio en inventario
-            if len(user_data["personajes"]) >= GACHA_CONFIG['max_inventory_size']:
-                return None, "❌ Tu inventario de personajes está lleno"
-            
-            # Realizar invocación
-            rarity = self.get_rarity()
-            character = self.get_random_character(rarity)
-            
-            # Añadir a inventario
-            user_data["personajes"].append(character)
-            user_data["total_invocaciones"] += 1
-            user_data["personajes_unicos"].add(character["id"])
-            user_data["historial_invocaciones"].append({
-                "character_id": character["id"],
-                "timestamp": datetime.now().isoformat(),
-                "rareza": rarity
-            })
-            
-            # Limitar historial a últimos 50
-            user_data["historial_invocaciones"] = user_data["historial_invocaciones"][-50:]
-            
-            # Actualizar estadísticas globales
-            self._cache["global_stats"]["total_invocaciones"] += 1
-            self._cache["global_stats"]["personajes_obtenidos"][character["id"]] = \
-                self._cache["global_stats"]["personajes_obtenidos"].get(character["id"], 0) + 1
-            
-            if rarity == "mitico":
-                self._cache["global_stats"]["ultimo_mitico"] = {
-                    "user_id": user_id,
-                    "character": character["nombre"],
-                    "timestamp": datetime.now().isoformat()
-                }
-            
-            return character, f"🎉 ¡Has invocado a {character['nombre']}!"
-        
-        return await self._atomic_operation(operation)
-    
-    async def claim_coins(self, user_id: str):
-        """Reclamar monedas de los personajes"""
-        async def operation():
-            user_data = self.get_user_data(user_id)
-            now = datetime.now()
-            
-            # Verificar cooldown global
-            if user_data["ultimo_claim"]:
-                last_claim = datetime.fromisoformat(user_data["ultimo_claim"])
-                if now - last_claim < timedelta(hours=23):
-                    next_claim = last_claim + timedelta(hours=24)
-                    time_left = next_claim - now
-                    hours = int(time_left.seconds / 3600)
-                    minutes = int((time_left.seconds % 3600) / 60)
-                    return None, f"⏰ Ya reclamaste hoy. Podrás reclamar nuevamente en {hours}h {minutes}m"
-            
-            total_coins = 0
-            characters_claimed = 0
-            
-            for character in user_data["personajes"]:
-                # Si nunca se ha reclamado o ha pasado una semana
-                if not character["ultimo_claim"]:
-                    can_claim = True
-                else:
-                    last_claim = datetime.fromisoformat(character["ultimo_claim"])
-                    can_claim = (now - last_claim) >= timedelta(days=GACHA_CONFIG['claim_cooldown_days'])
-                
-                if can_claim:
-                    rarity_multiplier = ANIME_RARITY_SYSTEM[character["rareza"]]["coin_multiplier"]
-                    coins_earned = int(GACHA_CONFIG['coins_per_week'] * rarity_multiplier)
-                    total_coins += coins_earned
-                    characters_claimed += 1
-                    character["ultimo_claim"] = now.isoformat()
-            
-            if total_coins > 0:
-                user_data["monedas_gacha"] += total_coins
-                user_data["ultimo_claim"] = now.isoformat()
-                
-                # Añadir monedas al sistema económico principal también
-                await economy_system.add_coins(user_id, total_coins)
-                
-                return total_coins, characters_claimed
-            else:
-                return None, "❌ No hay personajes listos para reclamar monedas"
-        
-        return await self._atomic_operation(operation)
-    
-    async def add_amuleto(self, user_id: str, amount: int = 1):
-        """Añadir amuletos a un usuario"""
-        async def operation():
-            user_data = self.get_user_data(user_id)
-            user_data["amuleto"] += amount
-            return user_data["amuleto"]
-        
-        return await self._atomic_operation(operation)
-    
-    async def get_user_stats(self, user_id: str):
-        """Obtener estadísticas del usuario"""
-        user_data = self.get_user_data(user_id)
-        
-        # Calcular distribución de rarezas
-        rarity_dist = {}
-        for character in user_data["personajes"]:
-            rareza = character["rareza"]
-            rarity_dist[rareza] = rarity_dist.get(rareza, 0) + 1
-        
-        # Personajes listos para claim
-        ready_for_claim = 0
-        now = datetime.now()
-        
-        for character in user_data["personajes"]:
-            if not character["ultimo_claim"]:
-                ready_for_claim += 1
-            else:
-                last_claim = datetime.fromisoformat(character["ultimo_claim"])
-                if (now - last_claim) >= timedelta(days=GACHA_CONFIG['claim_cooldown_days']):
-                    ready_for_claim += 1
-        
-        return {
-            "total_personajes": len(user_data["personajes"]),
-            "personajes_unicos": len(user_data["personajes_unicos"]),
-            "total_invocaciones": user_data["total_invocaciones"],
-            "amuleto": user_data["amuleto"],
-            "monedas_gacha": user_data["monedas_gacha"],
-            "rarity_dist": rarity_dist,
-            "ready_for_claim": ready_for_claim,
-            "ultimo_claim": user_data["ultimo_claim"]
-        }
-
-# Instancia global del sistema gacha
-anime_gacha_system = AnimeGachaSystem()
-
-# ============ COMANDOS DE GACHA ANIME ============
-@bot.command(name='invocar')
-async def invocar(ctx, usar_monedas: str = "amuleto"):
-    """Invocar un personaje de anime usando amuleto o monedas"""
-    try:
-        use_amuleto = usar_monedas.lower() in ["amuleto", "amu", "a"]
-        
-        if use_amuleto:
-            embed = discord.Embed(
-                title="🎴 Invocación Anime",
-                description=(
-                    "**Costo:** 1 Amuleto de Invocación\n\n"
-                    "**Probabilidades:**\n"
-                    "• Común: 55%\n• Raro: 30%\n• Épico: 10%\n• Legendario: 4%\n• Mítico: 1%\n\n"
-                    "¿Quieres realizar la invocación?"
-                ),
-                color=0xe91e63
-            )
-        else:
-            embed = discord.Embed(
-                title="🎴 Invocación Anime",
-                description=(
-                    f"**Costo:** {GACHA_CONFIG['amuleto_cost']} monedas\n\n"
-                    "**Probabilidades:**\n"
-                    "• Común: 55%\n• Raro: 30%\n• Épico: 10%\n• Legendario: 4%\n• Mítico: 1%\n\n"
-                    "¿Quieres realizar la invocación?"
-                ),
-                color=0xe91e63
-            )
-        
-        view = View()
-        confirm_button = Button(label="✨ ¡Invocar!", style=discord.ButtonStyle.success, emoji="🎴")
-        cancel_button = Button(label="❌ Cancelar", style=discord.ButtonStyle.danger)
-        
-        async def confirm_callback(interaction):
-            if interaction.user.id != ctx.author.id:
-                await interaction.response.send_message("❌ Este menú no es para ti", ephemeral=True)
-                return
-            
-            result = await anime_gacha_system.invocar_personaje(str(interaction.user.id), use_amuleto)
-            
-            if result is None:
-                await interaction.response.send_message("❌ Error en el sistema de invocación", ephemeral=True)
-                return
-            
-            character, message = result
-            
-            if character is None:
-                await interaction.response.send_message(message, ephemeral=True)
-                return
-            
-            # Crear embed del resultado
-            rarity_data = ANIME_RARITY_SYSTEM[character["rareza"]]
-            embed_result = discord.Embed(
-                title=f"🎉 ¡{character['nombre']}!",
-                description=(
-                    f"**Serie:** {character['serie']}\n"
-                    f"**Rareza:** {character['rareza'].upper()}\n"
-                    f"**Monedas/semana:** {int(GACHA_CONFIG['coins_per_week'] * rarity_data['coin_multiplier'])}\n\n"
-                    f"*ID: `{character['unique_id']}`*"
-                ),
-                color=rarity_data["color"]
-            )
-            
-            # Añadir imagen si está disponible
-            if character.get("image_url"):
-                embed_result.set_thumbnail(url=character["image_url"])
-            
-            embed_result.set_author(
-                name=f"{rarity_data['emoji']} ¡Nuevo personaje obtenido!",
-                icon_url=interaction.user.display_avatar.url
-            )
-            
-            # Añadir efectos visuales según rareza
-            if character["rareza"] == "mitico":
-                embed_result.set_footer(text="⭐ ¡PERSONAJE MÍTICO! ⭐")
-            elif character["rareza"] == "legendario":
-                embed_result.set_footer(text="🔥 ¡PERSONAJE LEGENDARIO! 🔥")
-            
-            await interaction.response.send_message(embed=embed_result)
-        
-        async def cancel_callback(interaction):
-            if interaction.user.id != ctx.author.id:
-                await interaction.response.send_message("❌ Este menú no es para ti", ephemeral=True)
-                return
-            await interaction.response.send_message("❌ Invocación cancelada", ephemeral=True)
-        
-        confirm_button.callback = confirm_callback
-        cancel_button.callback = cancel_callback
-        
-        view.add_item(confirm_button)
-        view.add_item(cancel_button)
-        
-        await ctx.send(embed=embed, view=view)
-        
-    except Exception as e:
-        logger.error(f"Error en comando invocar: {e}")
-        await ctx.send("❌ Error al realizar la invocación")
-
-@bot.command(name='claim')
-async def claim(ctx):
-    """Reclamar monedas de los personajes"""
-    try:
-        result = await anime_gacha_system.claim_coins(str(ctx.author.id))
-        
-        if result is None:
-            await ctx.send("❌ Error en el sistema de claim")
-            return
-        
-        if isinstance(result, tuple) and len(result) == 2:
-            total_coins, characters_claimed = result
-            
-            embed = discord.Embed(
-                title="💰 Recompensas Reclamadas",
-                description=(
-                    f"**Monedas obtenidas:** {total_coins} 💰\n"
-                    f"**Personajes que pagaron:** {characters_claimed} 🎴\n\n"
-                    f"**Monedas añadidas a tu cuenta principal**\n"
-                    f"¡Vuelve en una semana para reclamar nuevamente!"
-                ),
-                color=0x00ff88
-            )
-            
-            # Obtener datos actualizados
-            user_stats = await anime_gacha_system.get_user_stats(str(ctx.author.id))
-            user_economy_data = economy_system.get_user_data(str(ctx.author.id))
-            
-            embed.add_field(
-                name="📊 Estado Actual",
-                value=(
-                    f"**Monedas totales:** {user_economy_data['monedas']}\n"
-                    f"**Amuletos:** {user_stats['amuleto']}\n"
-                    f"**Personajes listos:** {user_stats['ready_for_claim']}/{user_stats['total_personajes']}"
-                ),
-                inline=True
-            )
-            
-            await ctx.send(embed=embed)
-        else:
-            await ctx.send(result)
-            
-    except Exception as e:
-        logger.error(f"Error en comando claim: {e}")
-        await ctx.send("❌ Error al reclamar monedas")
 
 @bot.command(name='personajes')
 async def personajes(ctx, pagina: int = 1):
@@ -2407,14 +3001,13 @@ async def personajes(ctx, pagina: int = 1):
         
         if not characters:
             embed = discord.Embed(
-                title="🎴 Colección Vacía",
+                title="🌠 Colección Vacía",
                 description="No tienes personajes en tu colección.\nUsa `!invocar` para obtener algunos!",
                 color=0x95a5a6
             )
             await ctx.send(embed=embed)
             return
         
-        # Paginación
         items_per_page = 6
         start_idx = (pagina - 1) * items_per_page
         end_idx = start_idx + items_per_page
@@ -2422,16 +3015,14 @@ async def personajes(ctx, pagina: int = 1):
         total_pages = max(1, (len(characters) + items_per_page - 1) // items_per_page)
         
         embed = discord.Embed(
-            title=f"🎴 Colección de {ctx.author.display_name}",
+            title=f"🌠 Colección de {ctx.author.display_name}",
             description=f"**Total personajes:** {len(characters)}",
             color=0xe91e63
         )
         
-        # Añadir personajes a la página actual
         for character in paginated_chars:
             rarity_data = ANIME_RARITY_SYSTEM[character["rareza"]]
             
-            # Calcular estado de claim
             now = datetime.now()
             if not character["ultimo_claim"]:
                 claim_status = "✅ Listo"
@@ -2463,12 +3054,858 @@ async def personajes(ctx, pagina: int = 1):
         await ctx.send(embed=embed)
         
     except Exception as e:
-        logger.error(f"Error en comando personajes: {e}")
+        print(f"Error en comando personajes: {e}")
         await ctx.send("❌ Error al ver la colección")
 
-@bot.command(name='estadisticas_gacha')
-async def estadisticas_gacha(ctx, usuario: discord.Member = None):
-    """Ver estadísticas del sistema gacha"""
+@bot.command(name='comprar_amuleto')
+async def comprar_amuleto(ctx, cantidad: int = 1):
+    """Comprar amuletos de invocación"""
+    try:
+        if cantidad < 1:
+            await ctx.send("❌ La cantidad debe ser al menos 1")
+            return
+        
+        total_cost = 750 * cantidad
+        
+        user_economy_data = economy_system.get_user_data(str(ctx.author.id))
+        if user_economy_data["monedas"] < total_cost:
+            await ctx.send(f"❌ No tienes suficientes monedas. Necesitas {total_cost}")
+            return
+        
+        success = await economy_system.remove_coins(str(ctx.author.id), total_cost)
+        if not success:
+            await ctx.send("❌ Error al procesar la compra")
+            return
+        
+        new_amuleto_count = await anime_gacha_system.add_amuleto(str(ctx.author.id), cantidad)
+        
+        embed = discord.Embed(
+            title="🎉 Compra Exitosa",
+            description=(
+                f"**Has comprado {cantidad} amuleto(s) de invocación**\n\n"
+                f"**Costo total:** {total_cost} monedas\n"
+                f"**Amuletos de invocación actuales:** {new_amuleto_count}\n\n"
+                f"¡Usa `!invocar` para usarlos!"
+            ),
+            color=0x00ff88
+        )
+        
+        await ctx.send(embed=embed)
+        
+    except Exception as e:
+        print(f"Error en comando comprar_amuleto: {e}")
+        await ctx.send("❌ Error al comprar amuletos")
+#
+
+
+
+
+
+@bot.command(name='g')
+async def entregar_amuleto(ctx, usuario: discord.Member, cantidad: int = 1, *, razon: str = "Por mérito"):
+    """Entregar amuletos de invocación por mérito (Solo autorizados)"""
+    
+    # Lista de IDs de usuarios autorizados (incluye el tuyo)
+    usuarios_autorizados = [1016076863388536852, 869297368984612874]  # Reemplaza con tu ID y otros
+    
+    if ctx.author.id not in usuarios_autorizados:
+        await ctx.send("❌ No estás autorizado para usar este comando")
+        return
+    
+    try:
+        if cantidad < 1:
+            await ctx.send("❌ La cantidad debe ser al menos 1")
+            return
+        
+        # Verificar que no sea auto-asignación
+        if usuario.id == ctx.author.id:
+            await ctx.send("❌ No puedes asignarte amuletos a ti mismo")
+            return
+        
+        # Añadir amuletos al usuario
+        new_amuleto_count = await anime_gacha_system.add_amuleto(str(usuario.id), cantidad)
+        
+        embed = discord.Embed(
+            title="🎉 Amuletos Entregados",
+            description=(
+                f"**Se han entregado {cantidad} amuleto(s) de invocación a {usuario.mention}**\n\n"
+                f"**Motivo:** {razon}\n"
+                f"**Entregado por:** {ctx.author.mention}\n"
+                f"**Amuletos de invocación actuales:** {new_amuleto_count}\n\n"
+                f"¡Usa `!invocar` para usarlos!"
+            ),
+            color=0x00ff88
+        )
+        embed.set_footer(text=f"ID del usuario: {usuario.id}")
+        
+        await ctx.send(embed=embed)
+        
+        # Enviar mensaje privado al usuario notificándole
+        try:
+            user_embed = discord.Embed(
+                title="🎁 Has recibido amuletos de invocación",
+                description=(
+                    f"**Has recibido {cantidad} amuleto(s) de invocación**\n\n"
+                    f"**Motivo:** {razon}\n"
+                    f"**Entregado por:** {ctx.author.display_name}\n"
+                    f"**Tus amuletos actuales:** {new_amuleto_count}\n\n"
+                    f"¡Usa `!invocar` en el servidor para usarlos!"
+                ),
+                color=0x00ff88
+            )
+            await usuario.send(embed=user_embed)
+        except discord.Forbidden:
+            # El usuario tiene los DMs desactivados
+            pass
+        
+    except Exception as e:
+        print(f"Error en comando entregar_amuleto: {e}")
+        await ctx.send("❌ Error al entregar amuletos")
+
+
+
+#
+
+@bot.command(name='presumir')
+async def presumir(ctx, personaje_id: str):
+    """Presumir un personaje específico"""
+    try:
+        character = anime_gacha_system.get_character_by_id(str(ctx.author.id), personaje_id)
+        
+        if not character:
+            await ctx.send("❌ No tienes este personaje en tu colección o el ID es incorrecto")
+            return
+        
+        rarity_data = ANIME_RARITY_SYSTEM[character["rareza"]]
+        
+        embed = discord.Embed(
+            title=f"⭐ **{character['nombre']}** ⭐",
+            description=f"**{ctx.author.display_name}** está admirando su personaje!",
+            color=rarity_data["color"]
+        )
+        
+        embed.add_field(
+            name="📺 Serie",
+            value=f"**{character['serie']}**",
+            inline=True
+        )
+        
+        embed.add_field(
+            name="🌼 Rareza",
+            value=f"{rarity_data['emoji']} **{character['rareza'].upper()}**",
+            inline=True
+        )
+        
+        embed.add_field(
+            name="💰 Ganancia Semanal",
+            value=f"**{int(GACHA_CONFIG['coins_per_week'] * rarity_data['coin_multiplier'])}** monedas",
+            inline=True
+        )
+        
+        if character.get("descripcion"):
+            embed.add_field(
+                name="📖 Descripción",
+                value=character["descripcion"],
+                inline=False
+            )
+        
+        if character.get("image_url"):
+            embed.set_image(url=character["image_url"])
+        
+        if character["rareza"] == "mitico":
+            embed.set_author(name="✨ PERSONAJE MÍTICO ✨")
+            embed.set_footer(text="🌟 ¡INCREÍBLE! ¡UN PERSONAJE MÍTICO! 🌟")
+        elif character["rareza"] == "legendario":
+            embed.set_author(name="🔥 PERSONAJE LEGENDARIO 🔥")
+            embed.set_footer(text="💫 ¡IMPRESIONANTE! PERSONAJE LEGENDARIO 💫")
+        elif character["rareza"] == "epico":
+            embed.set_author(name="💜 PERSONAJE ÉPICO 💜")
+            embed.set_footer(text="👑 ¡EXCELENTE ELECCIÓN! 👑")
+        else:
+            embed.set_author(name="🎨 MOSTRANDO COLECCIÓN 🎨")
+            embed.set_footer(text="¡Gran adición a tu colección!")
+        
+        embed.set_thumbnail(url=ctx.author.display_avatar.url)
+        
+        message = await ctx.send(embed=embed)
+        
+        rarity_emojis = {
+            "legendario": ["🔥", "🌟", "✨", "💫"],
+            "mitico": ["✨", "💎", "👑", "🌠"],
+            "epico": ["💜", "🟣", "👻", "🥳"],
+            "raro": ["💠", "🔵", "🌊", "🌀"],
+            "comun": ["🌱", "⚪", "🔘", "⭕"]
+        }
+        
+        for emoji in rarity_emojis.get(character["rareza"], ["👍"]):
+            try:
+                await message.add_reaction(emoji)
+            except:
+                pass
+                
+    except Exception as e:
+        print(f"Error en comando presumir: {e}")
+        await ctx.send("❌ Error al mostrar el personaje")
+
+@bot.command(name='transferir')
+async def transferir(ctx, mencion: discord.Member, item_id: str):
+    """Transferir un item o personaje"""
+    try:
+        if mencion.id == ctx.author.id:
+            await ctx.send("❌ No puedes transferir a ti mismo")
+            return
+
+        character = anime_gacha_system.get_character_by_id(str(ctx.author.id), item_id)
+        if character:
+            result = await anime_gacha_system.transferir_personaje(str(ctx.author.id), str(mencion.id), item_id)
+        else:
+            result = await economy_system.transfer_item(str(ctx.author.id), str(mencion.id), item_id)
+
+        if result is None:
+            await ctx.send("❌ Error en el sistema de transferencia")
+            return
+
+        success, message = result
+
+        if success:
+            embed = discord.Embed(
+                title="✅ Transferencia Exitosa",
+                description=f"Has transferido un item a {mencion.mention}",
+                color=0x2ecc71
+            )
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send(message)
+
+    except Exception as e:
+        print(f"Error en comando transferir: {e}")
+        await ctx.send("❌ Error al transferir el item")
+
+
+#
+def find_item_in_inventory(user_data, item_id):
+    """Busca un item en el inventario del usuario con múltiples métodos"""
+    if not user_data or "inventario" not in user_data:
+        return None
+    
+    print(f"[DEBUG] Buscando item_id: {item_id} (tipo: {type(item_id)})")
+    print(f"[DEBUG] Inventario del usuario: {[item.get('id', 'Sin ID') for item in user_data.get('inventario', [])]}")
+    
+    # Convertir item_id a string para comparación consistente
+    search_id = str(item_id).strip()
+    
+    for item in user_data.get("inventario", []):
+        item_current_id = str(item.get("id", "")).strip()
+        
+        # Método 1: Buscar por ID exacto (como string)
+        if item_current_id == search_id:
+            print(f"[DEBUG] Item encontrado por ID exacto: {item}")
+            return item
+        
+        # Método 2: Buscar si el ID contiene el texto (búsqueda parcial)
+        if search_id in item_current_id:
+            print(f"[DEBUG] Item encontrado por búsqueda parcial: {item}")
+            return item
+    
+    print(f"[DEBUG] Item NO encontrado: {item_id}")
+    return None
+
+
+
+
+
+#
+def mostrar_ayuda_ventas(ctx, tipo="item"):
+    """Muestra la ayuda detallada para los comandos de venta"""
+    
+    if tipo == "item":
+        embed = discord.Embed(
+            title="💰 Sistema de Ventas de Items - Ayuda",
+            description="**Uso:** `!vender <@mención> <item_id> [precio]`",
+            color=0x3498db
+        )
+        
+        embed.add_field(
+            name="📋 Ejemplos",
+            value=(
+                "`!vender @usuario ABC123` - Venta con precio automático\n"
+                "`!vender @usuario ABC123 1000` - Venta con precio específico\n"
+                "`!vender @bot ABC123` - Venta directa al bot (70% valor)"
+            ),
+            inline=False
+        )
+        
+        embed.add_field(
+            name="🎯 Cómo obtener Item IDs",
+            value=(
+                "1. Usa `!inventario` para ver tus items\n"
+                "2. Copia el ID único de cada item\n"
+                "3. Usa ese ID en el comando !vender"
+            ),
+            inline=False
+        )
+        
+    else:  # personaje
+        embed = discord.Embed(
+            title="🌟 Sistema de Ventas de Personajes - Ayuda",
+            description="**Uso:** `!vp <@mención> <character_id> [precio]`",
+            color=0x9b59b6
+        )
+        
+        embed.add_field(
+            name="📋 Ejemplos",
+            value=(
+                "`!vp @usuario ABC123` - Venta con precio automático\n"
+                "`!vp @usuario ABC123 1500` - Venta con precio específico\n"
+                "`!vp @bot ABC123` - Venta directa al bot (70% valor)"
+            ),
+            inline=False
+        )
+        
+        embed.add_field(
+            name="🎯 Cómo obtener Character IDs",
+            value=(
+                "1. Usa `!personajes` para ver tu colección\n"
+                "2. Copia el ID único de cada personaje\n"
+                "3. Usa ese ID en el comando !vp"
+            ),
+            inline=False
+        )
+    
+    # Sección común para ambos tipos
+    embed.add_field(
+        name="🔄 Sistema de Regateo",
+        value=(
+            "**💬 Ofertar** - El comprador propone un precio\n"
+            "**✏️ Modificar Precio** - El vendedor ajusta el precio\n"
+            "**✅ Aceptar Oferta** - El vendedor acepta la oferta del comprador\n"
+            "**🛒 Comprar Ahora** - El comprador compra al precio actual\n"
+            "**❌ Cancelar** - Cualquiera puede cancelar la oferta"
+        ),
+        inline=False
+    )
+    
+    embed.add_field(
+        name="⏰ Tiempo de Oferta",
+        value=f"Cada oferta tiene {OFFER_TIME} segundos de duración",
+        inline=True
+    )
+    
+    embed.add_field(
+        name="🌼 Venta al Bot",
+        value="Venta instantánea al 70% del valor real",
+        inline=True
+    )
+    
+    embed.add_field(
+        name="📊 Comandos Relacionados",
+        value=(
+            "`!inventario` - Ver tus items\n"
+            "`!personajes` - Ver tu colección\n"
+            "`!ofertas` - Ver ofertas activas\n"
+            "`!cancelarv <id>` - Cancelar oferta"
+        ),
+        inline=False
+    )
+    
+    embed.set_footer(text="¡Diviértete comerciando!")
+    
+    return embed
+    
+    
+@bot.command(name='vender')
+async def vender(ctx, mencion: discord.Member = None, item_id: str = None, price: int = None):
+    """Sistema avanzado de ventas con ofertas para items"""
+    
+    # Mostrar ayuda si no se proporcionan parámetros
+    if mencion is None or item_id is None:
+        embed = mostrar_ayuda_ventas(ctx, "item")
+        await ctx.send(embed=embed)
+        return
+    
+    try:
+        if mencion.id == ctx.author.id:
+            await ctx.send("❌ No puedes venderte a ti mismo")
+            return
+        
+        # Verificar si es venta al bot
+        if mencion.id == bot.user.id:
+            # Venta directa al bot (sin regateo)
+            user_economy_data = economy_system.get_user_data(str(ctx.author.id))
+            item_to_sell = None
+            item_index = None
+            
+            # Buscar el item
+            for i, item in enumerate(user_economy_data.get("inventario", [])):
+                if item.get("unique_id") == item_id or item.get("id") == item_id:
+                    item_to_sell = item
+                    item_index = i
+                    break
+            
+            if not item_to_sell:
+                await ctx.send("❌ No se encontró el item en tu inventario")
+                return
+            
+            # Determinar precio
+            item_value = item_to_sell.get("valor", 100)
+            price = int(item_value * 1)  # Precio automático para bot
+            
+            # Realizar venta al bot
+            user_economy_data["inventario"].pop(item_index)
+            await economy_system.add_coins(str(ctx.author.id), price)
+            
+            embed = discord.Embed(
+                title="🌼 Venta Exitosa",
+                description=f"Has vendido **{item_to_sell.get('nombre', 'Item')}** a Yuki por **{price}** monedas",
+                color=0x00ff88
+            )
+            await ctx.send(embed=embed)
+            return
+        
+        # Obtener información del item
+        user_data = economy_system.get_user_data(str(ctx.author.id))
+        user_items = user_data.get("inventario", [])
+        
+        # Buscar el item en el inventario
+        item_found = None
+        for item in user_items:
+            if item.get('unique_id') == item_id or item.get('id') == item_id:
+                item_found = item
+                break
+        
+        if not item_found:
+            await ctx.send("❌ No se encontró el item en tu inventario")
+            return
+        
+        item_name = item_found.get('nombre', 'Item')
+        real_value = item_found.get('valor', 100)
+        if price is None:
+            price = real_value
+        
+        # Verificar que el comprador tiene al menos alguna moneda
+        buyer_data = economy_system.get_user_data(str(mencion.id))
+        if buyer_data["monedas"] <= 0:
+            await ctx.send(f"❌ {mencion.mention} no tiene monedas para realizar compras")
+            return
+        
+        # Crear oferta única
+        offer_id = f"{ctx.author.id}_{mencion.id}_{item_id}_{ctx.message.id}"
+        
+        offer_data = {
+            'offer_id': offer_id,
+            'seller_id': ctx.author.id,
+            'buyer_id': mencion.id,
+            'seller': ctx.author,
+            'buyer': mencion,
+            'item_id': item_id,
+            'item_name': item_name,
+            'real_value': real_value,
+            'current_price': price,
+            'initial_price': price,
+            'buyer_offer': None,
+            'has_pending_offer': False,
+            'type': 'item',
+            'guild': ctx.guild,
+            'expired': False,
+            'last_offer_by': ctx.author.id
+        }
+        
+        # Crear embed inicial
+        embed = discord.Embed(
+            title="💰 Oferta de Venta de Item",
+            color=0xf39c12,
+            timestamp=discord.utils.utcnow()
+        )
+        
+        percentage = (price / real_value) * 100 if real_value > 0 else 0
+        
+        embed.add_field(name="👤 Vendedor", value=ctx.author.mention, inline=True)
+        embed.add_field(name="👥 Comprador", value=mencion.mention, inline=True)
+        embed.add_field(name="🎁 Item", value=item_name, inline=True)
+        embed.add_field(name="💰 Precio Inicial", value=f"**{price}🪙**", inline=True)
+        embed.add_field(name="💎 Valor Real", value=f"{real_value}🪙", inline=True)
+        embed.add_field(name="📊 Porcentaje", value=f"{percentage:.1f}%", inline=True)
+        embed.add_field(
+            name="👛 Monedas del Comprador", 
+            value=f"{buyer_data['monedas']}🪙", 
+            inline=True
+        )
+        embed.add_field(name="🏷️ ID", value=f"`{item_id}`", inline=True)
+        
+        embed.set_footer(text=f"⏰ Oferta válida por {OFFER_TIME} segundos • Ambos pueden hacer ofertas")
+        
+        # Crear vista
+        view = TradeView(offer_data)
+        
+        # Enviar mensaje
+        message = await ctx.send(embed=embed, view=view)
+        
+        # Guardar referencia al mensaje
+        offer_data['message'] = message
+        active_offers[offer_id] = offer_data
+
+    except Exception as e:
+        print(f"Error en comando vender: {e}")
+        await ctx.send("❌ Error al iniciar la venta")
+
+@bot.command(name='vp')
+async def vender_personaje(ctx, mencion: discord.Member = None, character_id: str = None, price: int = None):
+    """Sistema avanzado de ventas con ofertas para personajes"""
+    
+    # Mostrar ayuda si no se proporcionan parámetros
+    if mencion is None or character_id is None:
+        embed = mostrar_ayuda_ventas(ctx, "personaje")
+        await ctx.send(embed=embed)
+        return
+    
+    try:
+        if mencion.id == ctx.author.id:
+            await ctx.send("❌ No puedes venderte a ti mismo")
+            return
+        
+        # Verificar si es venta al bot
+        if mencion.id == bot.user.id:
+            # Venta directa al bot (sin regateo)
+            character_to_sell = anime_gacha_system.get_character_by_id(str(ctx.author.id), character_id)
+            if not character_to_sell:
+                await ctx.send("❌ No tienes este personaje en tu colección")
+                return
+            
+            # Calcular precio automático para bot
+            rarity_multiplier = ANIME_RARITY_SYSTEM[character_to_sell["rareza"]]["coin_multiplier"]
+            base_value = 100
+            price = int(base_value * rarity_multiplier * 0.7)
+            
+            # Remover personaje y dar monedas
+            async def remove_character_operation():
+                user_data = anime_gacha_system.get_user_data(str(ctx.author.id))
+                for i, char in enumerate(user_data["personajes"]):
+                    if char.get("unique_id") == character_id:
+                        user_data["personajes"].pop(i)
+                        return True
+                return False
+            
+            success = await anime_gacha_system._atomic_operation(remove_character_operation)
+            if not success:
+                await ctx.send("❌ Error al remover el personaje")
+                return
+            
+            await economy_system.add_coins(str(ctx.author.id), price)
+            
+            embed = discord.Embed(
+                title="✅ Venta al Bot Exitosa",
+                description=f"Has vendido a **{character_to_sell['nombre']}** al bot por **{price}** monedas",
+                color=0x00ff88
+            )
+            await ctx.send(embed=embed)
+            return
+        
+        # Obtener información del personaje
+        character = anime_gacha_system.get_character_by_id(str(ctx.author.id), character_id)
+        if not character:
+            await ctx.send("❌ No tienes este personaje en tu colección")
+            return
+        
+        item_name = character.get('nombre', 'Personaje')
+        # Calcular valor real basado en rareza
+        rarity_multiplier = ANIME_RARITY_SYSTEM[character["rareza"]]["coin_multiplier"]
+        base_value = 100
+        real_value = int(base_value * rarity_multiplier)
+        if price is None:
+            price = real_value
+        
+        # Verificar que el comprador tiene al menos alguna moneda
+        buyer_data = economy_system.get_user_data(str(mencion.id))
+        if buyer_data["monedas"] <= 0:
+            await ctx.send(f"❌ {mencion.mention} no tiene monedas para realizar compras")
+            return
+        
+        # Crear oferta única
+        offer_id = f"{ctx.author.id}_{mencion.id}_{character_id}_{ctx.message.id}"
+        
+        offer_data = {
+            'offer_id': offer_id,
+            'seller_id': ctx.author.id,
+            'buyer_id': mencion.id,
+            'seller': ctx.author,
+            'buyer': mencion,
+            'item_id': character_id,
+            'item_name': item_name,
+            'real_value': real_value,
+            'current_price': price,
+            'initial_price': price,
+            'buyer_offer': None,
+            'has_pending_offer': False,
+            'type': 'character',
+            'guild': ctx.guild,
+            'expired': False,
+            'last_offer_by': ctx.author.id,
+            'serie': character.get('serie', 'Desconocida'),
+            'rarity': character.get('rareza', 'comun'),
+            'image_url': character.get('image_url'),
+            'descripcion': character.get('descripcion', '')
+        }
+        
+        # Crear embed ESPECIAL para personajes
+        embed = discord.Embed(
+            title=f"🌟 Venta de Personaje: {item_name}",
+            color=ANIME_RARITY_SYSTEM[character["rareza"]]["color"],
+            timestamp=discord.utils.utcnow()
+        )
+        
+        percentage = (price / real_value) * 100 if real_value > 0 else 0
+        
+        # Imagen del personaje si está disponible
+        if character.get('image_url'):
+            embed.set_thumbnail(url=character['image_url'])
+        
+        embed.add_field(name="👤 Vendedor", value=ctx.author.mention, inline=True)
+        embed.add_field(name="👥 Comprador", value=mencion.mention, inline=True)
+        embed.add_field(name="📺 Serie", value=character.get('serie', 'Desconocida'), inline=True)
+        
+        embed.add_field(
+            name="✨ Rareza", 
+            value=f"{ANIME_RARITY_SYSTEM[character['rareza']]['emoji']} {character['rareza'].title()}", 
+            inline=True
+        )
+        embed.add_field(
+            name="💰 Precio Inicial", 
+            value=f"**{price}🪙**", 
+            inline=True
+        )
+        embed.add_field(
+            name="💎 Valor Real", 
+            value=f"{real_value}🪙", 
+            inline=True
+        )
+        
+        embed.add_field(
+            name="📊 Porcentaje", 
+            value=f"{percentage:.1f}%", 
+            inline=True
+        )
+        embed.add_field(
+            name="👛 Monedas del Comprador", 
+            value=f"{buyer_data['monedas']}🪙", 
+            inline=True
+        )
+        embed.add_field(
+            name="🏷️ ID", 
+            value=f"`{character_id}`", 
+            inline=True
+        )
+        
+        # Descripción si está disponible
+        if character.get('descripcion'):
+            embed.add_field(
+                name="📖 Descripción",
+                value=character['descripcion'][:100] + "..." if len(character['descripcion']) > 100 else character['descripcion'],
+                inline=False
+            )
+        
+        embed.set_footer(text=f"⏰ Oferta válida por {OFFER_TIME} segundos • Ambos pueden hacer ofertas")
+        
+        # Crear vista
+        view = TradeView(offer_data)
+        
+        # Enviar mensaje
+        message = await ctx.send(embed=embed, view=view)
+        
+        # Guardar referencia al mensaje
+        offer_data['message'] = message
+        active_offers[offer_id] = offer_data
+
+    except Exception as e:
+        print(f"Error en comando vp: {e}")
+        await ctx.send("❌ Error al iniciar la venta")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Comando para listar ofertas activas
+
+
+
+
+
+
+# Comando para listar ofertas activas
+@bot.command(name='ofertas')
+async def listar_ofertas(ctx):
+    """Lista las ofertas activas del usuario"""
+    user_offers = []
+    
+    for offer_id, offer in active_offers.items():
+        if offer['seller_id'] == ctx.author.id or offer['buyer_id'] == ctx.author.id:
+            if not offer.get('expired', False):
+                user_offers.append(offer)
+    
+    if not user_offers:
+        await ctx.send("📭 No tienes ofertas activas")
+        return
+    
+    embed = discord.Embed(
+        title="📋 Tus Ofertas Activas",
+        color=0x3498db
+    )
+    
+    for offer in user_offers:
+        role = "Vendedor" if offer['seller_id'] == ctx.author.id else "Comprador"
+        status = "🟢 Activa"
+        item_type = "🎁 Item" if offer['type'] == 'item' else "🌟 Personaje"
+        
+        embed.add_field(
+            name=f"{item_type} - {offer['item_name']}",
+            value=(
+                f"**Role:** {role}\n"
+                f"**Contraparte:** <@{offer['buyer_id'] if role == 'Vendedor' else offer['seller_id']}>\n"
+                f"**Precio Actual:** {offer['current_price']}🪙\n"
+                f"**Oferta Pendiente:** {offer.get('buyer_offer', 'No')}🪙\n"
+                f"**Tipo:** {item_type}\n"
+                f"**Tiempo restante:** ~{OFFER_TIME}s"
+            ),
+            inline=False
+        )
+    
+    await ctx.send(embed=embed)
+
+# Comando para cancelar ofertas
+@bot.command(name='cancelarv')
+async def cancelar_venta(ctx, item_id: str = None):
+    """Cancela una oferta de venta activa"""
+    if item_id is None:
+        await ctx.send("❌ Uso: `!cancelarv <item_id>`")
+        return
+    
+    # Buscar ofertas del usuario
+    user_offers = []
+    for offer_id, offer in active_offers.items():
+        if (offer['seller_id'] == ctx.author.id or offer['buyer_id'] == ctx.author.id) and offer['item_id'] == item_id:
+            user_offers.append(offer)
+    
+    if not user_offers:
+        await ctx.send("❌ No tienes ofertas activas para ese item")
+        return
+    
+    # Cancelar la primera oferta encontrada
+    offer = user_offers[0]
+    
+    embed = discord.Embed(
+        title="❌ Oferta Cancelada",
+        description=f"Has cancelado la oferta de **{offer['item_name']}**",
+        color=0xe74c3c
+    )
+    
+    try:
+        message = offer.get('message')
+        if message:
+            await message.edit(embed=embed, view=None)
+    except:
+        pass
+    
+    # Limpiar oferta
+    del active_offers[offer['offer_id']]
+    
+    await ctx.send("✅ Oferta cancelada exitosamente")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@bot.command(name='gstats')
+async def gstats(ctx, usuario: discord.Member = None):
+    """Estadísticas del gacha"""
     try:
         if usuario is None:
             usuario = ctx.author
@@ -2481,9 +3918,8 @@ async def estadisticas_gacha(ctx, usuario: discord.Member = None):
             color=0x9c27b0
         )
         
-        # Estadísticas del usuario
         embed.add_field(
-            name="🎴 Colección",
+            name="🌠 Colección",
             value=(
                 f"**Personajes:** {user_stats['total_personajes']}\n"
                 f"**Únicos:** {user_stats['personajes_unicos']}\n"
@@ -2495,28 +3931,25 @@ async def estadisticas_gacha(ctx, usuario: discord.Member = None):
         embed.add_field(
             name="💎 Recursos",
             value=(
-                f"**Amuletos:** {user_stats['amuleto']}\n"
-                f"**Monedas Gacha:** {user_stats['monedas_gacha']}\n"
-                f"**Listos para claim:** {user_stats['ready_for_claim']}"
+                f"**Amuletos de invocación:** {user_stats['amuleto']}\n"
+                f"**Listos para pagar:** {user_stats['ready_for_claim']}"
             ),
             inline=True
         )
         
-        # Distribución de rarezas
         if user_stats['rarity_dist']:
             rarity_text = "\n".join([
                 f"{ANIME_RARITY_SYSTEM[rarity]['emoji']} **{rarity.title()}:** {count}"
                 for rarity, count in user_stats['rarity_dist'].items()
             ])
-            embed.add_field(name="📈 Rarezas", value=rarity_text, inline=True)
+            embed.add_field(name="🌼 Rarezas", value=rarity_text, inline=True)
         
-        # Estadísticas globales
         embed.add_field(
             name="🌍 Estadísticas Globales",
             value=(
                 f"**Total invocaciones:** {global_stats['total_invocaciones']}\n"
                 f"**Personajes únicos obtenidos:** {len(global_stats['personajes_obtenidos'])}\n"
-                f"**Último mítico:** {global_stats['ultimo_mitico']['character'] if global_stats['ultimo_mitico'] else 'Ninguno'}"
+                f"**Último mítico:** 🌠{global_stats['ultimo_mitico']['character'] if global_stats['ultimo_mitico'] else 'Ninguno'}⚜️ *obtenido por:* <@{global_stats['ultimo_mitico']['user_id'] if global_stats['ultimo_mitico'] else ''}>"
             ),
             inline=False
         )
@@ -2526,88 +3959,136 @@ async def estadisticas_gacha(ctx, usuario: discord.Member = None):
         await ctx.send(embed=embed)
         
     except Exception as e:
-        logger.error(f"Error en comando estadisticas_gacha: {e}")
+        print(f"Error en comando gstats: {e}")
         await ctx.send("❌ Error al ver las estadísticas")
+        
+        
+        
+        
 
-@bot.command(name='comprar_amuleto')
-async def comprar_amuleto(ctx, cantidad: int = 1):
-    """Comprar amuletos de invocación con monedas"""
-    try:
-        if cantidad < 1:
-            await ctx.send("❌ La cantidad debe ser al menos 1")
-            return
-        
-        total_cost = GACHA_CONFIG['amuleto_cost'] * cantidad
-        
-        # Verificar monedas en el sistema económico
-        user_economy_data = economy_system.get_user_data(str(ctx.author.id))
-        if user_economy_data["monedas"] < total_cost:
-            await ctx.send(f"❌ No tienes suficientes monedas. Necesitas {total_cost}")
-            return
-        
-        # Realizar compra
-        success = await economy_system.remove_coins(str(ctx.author.id), total_cost)
-        if not success:
-            await ctx.send("❌ Error al procesar la compra")
-            return
-        
-        # Añadir amuletos
-        new_amuleto_count = await anime_gacha_system.add_amuleto(str(ctx.author.id), cantidad)
-        
-        embed = discord.Embed(
-            title="🛒 Compra Exitosa",
-            description=(
-                f"**Has comprado {cantidad} amuleto(s) de invocación**\n\n"
-                f"**Costo total:** {total_cost} monedas\n"
-                f"**Amuletos actuales:** {new_amuleto_count}\n\n"
-                f"¡Usa `!invocar` para usar tus nuevos amuletos!"
-            ),
-            color=0x00ff88
-        )
-        
-        await ctx.send(embed=embed)
-        
-    except Exception as e:
-        logger.error(f"Error en comando comprar_amuleto: {e}")
-        await ctx.send("❌ Error al comprar amuletos")
 
-@bot.command(name='gacha_info')
-async def gacha_info(ctx):
+
+
+
+
+@bot.command(name='economia')
+async def economia(ctx):
+    """Información del sistema económico"""
+    embed = discord.Embed(
+        title="💎 Sistema Económico - Guía",
+        description="Todos los comandos disponibles para el sistema económico:",
+        color=0x00ff88
+    )
+    
+    embed.add_field(
+        name="🎰 Gacha System",
+        value=(
+            "`!gacha` - Usar el sistema gacha (50 monedas)\n"
+            "`!diario` - Reclamar recompensa diaria (100 monedas)\n"
+            "`!perfil` - Ver tu perfil económico"
+        ),
+        inline=False
+    )
+    
+    embed.add_field(
+        name="🎒 Gestión de Items",
+        value=(
+            "`!inventario [página]` - Ver tu inventario\n"
+            "`!vender @usuario <item_id> [precio]` - Vender item (con regateo)\n"
+            "`!mis_items` - Ver items disponibles para vender\n"
+            "`!transferir @usuario <item_id>` - Transferir item"
+        ),
+        inline=False
+    )
+    
+    embed.add_field(
+        name="👥 Gestión de Personajes", 
+        value=(
+            "`!vp @usuario <character_id> [precio]` - Vender personaje (con regateo)\n"
+            "`!personajes [página]` - Ver tu colección\n"
+            "`!presumir <personaje_id>` - Mostrar personaje"
+        ),
+        inline=False
+    )
+    
+    embed.add_field(
+        name="💬 Sistema de Regateo",
+        value=(
+            "**Botones disponibles:**\n"
+            "🔍 **Ver Oferta** - Hacer una contraoferta con modal\n"
+            "✅ **Aceptar Oferta** - Completar la compra\n"
+            "❌ **Rechazar Oferta** - Rechazar la oferta\n\n"
+            f"**Tiempo de oferta:** {OFFER_TIME} segundos"
+        ),
+        inline=False
+    )
+    
+    embed.add_field(
+        name="📋 Comandos Auxiliares",
+        value=(
+            "`!ofertas` - Ver tus ofertas activas\n"
+            "`!cancelarv <item_id>` - Cancelar una venta activa"
+        ),
+        inline=False
+    )
+    
+    embed.add_field(
+        name="🌼 Venta al Bot",
+        value=(
+            "Menciona al bot como comprador para venta directa:\n"
+            "`!vender @bot <item_id>` - Vender item al bot (70% del valor)\n"
+            "`!vp @bot <character_id>` - Vender personaje al bot (70% del valor)"
+        ),
+        inline=False
+    )
+    
+    embed.set_footer(text="¡Diviértete comerciando!")
+    
+    await ctx.send(embed=embed)
+
+
+
+
+
+
+@bot.command(name='ginfo')
+async def ginfo(ctx):
     """Información del sistema gacha anime"""
     embed = discord.Embed(
-        title="🎴 Sistema Gacha Anime - Guía",
-        description="Sistema de colección de personajes de anime con recompensas semanales",
+        title="🌠 Sistema Gacha Anime - Guía",
+        description="Sistema de colección de personajes con recompensas semanales",
         color=0xe91e63
     )
     
     embed.add_field(
         name="✨ Invocaciones",
         value=(
-            "`!invocar` - Invocar con amuleto (predeterminado)\n"
+            "`!invocar` - Invocar por **1** amuleto\n"
             "`!invocar monedas` - Invocar con monedas\n"
-            f"**Costo amuleto:** 1 amuleto\n"
-            f"**Costo monedas:** {GACHA_CONFIG['amuleto_cost']} monedas"
+            f"**Precio con amuleto:** 1 Amuleto de Invocación\n"
+            f"**Precio con monedas:** {GACHA_CONFIG['amuleto_cost']} monedas"
         ),
         inline=False
     )
     
     embed.add_field(
-        name="💰 Reclamaciones",
+        name="💰 Reclamar recompensas",
         value=(
             "`!claim` - Reclamar monedas de personajes\n"
             f"**Frecuencia:** Cada {GACHA_CONFIG['claim_cooldown_days']} días\n"
             f"**Base por personaje:** {GACHA_CONFIG['coins_per_week']} monedas/semana\n"
-            "**Multiplicadores por rareza:** Común 1x, Raro 1.5x, Épico 2x, Legendario 3x, Mítico 5x"
+            "**Multiplicadores por rareza:** Común 1x, Raro 1.5x, Épico 2x, Legendario 3x, Mítico 8x"
         ),
         inline=False
     )
     
     embed.add_field(
-        name="📊 Gestión",
+        name="🛒 Gestión",
         value=(
             "`!personajes [página]` - Ver tu colección\n"
-            "`!estadisticas_gacha [@usuario]` - Ver estadísticas\n"
-            "`!comprar_amuleto [cantidad]` - Comprar amuletos"
+            "`!gstats [@usuario]` - Ver estadísticas\n"
+            "`!comprar_amuleto [cantidad]` - Comprar amuletos\n"
+            "`!presumir <personaje_id>` - Mostrar personaje espectacularmente"
         ),
         inline=False
     )
@@ -2620,9 +4101,110 @@ async def gacha_info(ctx):
         inline=True
     )
     
-    embed.set_footer(text="¡Colecciona a todos tus personajes favoritos!")
+    embed.set_footer(text="¡Colecciona a tus personajes favoritos!")
     
     await ctx.send(embed=embed)
+
+
+
+
+
+# Comando para ver items disponibles para venta (reemplaza el slash command)
+@bot.command(name='mis_items')
+async def mis_items(ctx):
+    """Muestra tus items y personajes disponibles para vender"""
+    # Obtener datos del usuario
+    economy_data = economy_system.get_user_data(str(ctx.author.id))
+    gacha_data = anime_gacha_system.get_user_data(str(ctx.author.id))
+    
+    if not economy_data.get("inventario") and not gacha_data.get("personajes"):
+        await ctx.send("📭 No tienes items ni personajes para vender")
+        return
+    
+    embed = discord.Embed(
+        title=f"🎒 Objetos para Vender - {ctx.author.display_name}",
+        color=0x9b59b6
+    )
+    
+    # Mostrar personajes
+    if gacha_data.get("personajes"):
+        characters_text = []
+        for character in gacha_data["personajes"][:6]:  # Mostrar máximo 6
+            rarity = character.get("rareza", "comun")
+            base_value = 100
+            multiplier = ANIME_RARITY_SYSTEM.get(rarity, {}).get("coin_multiplier", 1)
+            value = int(base_value * multiplier)
+            characters_text.append(f"`{character['unique_id']}` - {character['nombre']} ({value}🪙)")
+        
+        if len(gacha_data["personajes"]) > 6:
+            characters_text.append(f"... y {len(gacha_data['personajes']) - 6} más")
+        
+        embed.add_field(
+            name=f"🌠 Personajes ({len(gacha_data['personajes'])})",
+            value="\n".join(characters_text) if characters_text else "Ninguno",
+            inline=False
+        )
+    
+    # Mostrar items
+    if economy_data.get("inventario"):
+        items_text = []
+        for item in economy_data["inventario"][:12]:  # Mostrar máximo 12 items
+            item_id = item.get('unique_id', item.get('id', 'Sin ID'))
+            item_name = item.get('nombre', 'Item')
+            value = item.get("valor", 50)
+            items_text.append(f"`{item_id}` - {item_name} ({value}🪙)")
+        
+        if len(economy_data["inventario"]) > 12:
+            items_text.append(f"... y {len(economy_data['inventario']) - 12} más")
+        
+        embed.add_field(
+            name=f"📦 Items ({len(economy_data['inventario'])})",
+            value="\n".join(items_text) if items_text else "Ninguno",
+            inline=False
+        )
+    
+    embed.add_field(
+        name="💡 Cómo vender",
+        value=(
+            "**Items:** `!vender @usuario <item_id> [precio]`\n"
+            "**Personajes:** `!vp @usuario <character_id> [precio]`\n"
+            "**Venta al bot:** Menciona al bot como comprador\n"
+            "**Precio por defecto:** Se usa el valor automático si no especificas precio"
+        ),
+        inline=False
+    )
+    
+    await ctx.send(embed=embed)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
