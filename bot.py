@@ -85,7 +85,7 @@ async def on_member_join(member):
 	if channel:
 		mensajes = [
 			f"¡Hola {member.mention}! 🌸 Bienvenido/a a **{member.guild.name}** 💖",
-			f"¡Bienvenid@ {member.mention}! 🎮 Espero que pases buenos momentos en **{member.guild.name}**",
+			f"¡Bienvenid@ {member.mention}! 🎮 Espero que disfrutes en **{member.guild.name}**",
 			f"¡Hey {member.mention}! 🌟 Te damos la bienvenida a **{member.guild.name}**"
 		]
 		
@@ -118,7 +118,8 @@ async def on_message(message):
 async def ayuda(ctx):
 	respuestas = [
 		"Q te pasa we?",
-		"¿Necesitas ayuda? ¡Usa `!comandos`!"
+		"¿Necesitas ayuda? ¡Usa `!comandos`!",
+		"No sé we, ¿por qué me preguntas a mí?"
 	]
 	await ctx.send(random.choice(respuestas))
 
@@ -3411,90 +3412,79 @@ def mostrar_ayuda_ventas(ctx, tipo="item"):
     
     return embed
     
-❌ Error al iniciar la venta")
-
-
-
-
-async def handle_vender_command(ctx, mencion: discord.Member = None, item_id: str = None, price: int = None):
-    """Sistema unificado de ventas - Menú interactivo y comandos directos"""
     
-    # Si no hay parámetros, mostrar menú interactivo (ya manejado en el comando)
-    if mencion is None and item_id is None:
+@bot.command(name='vender')
+async def vender(ctx, mencion: discord.Member = None, item_id: str = None, price: int = None):
+    """Sistema avanzado de ventas con ofertas para items"""
+    
+    # Mostrar ayuda si no se proporcionan parámetros
+    if mencion is None or item_id is None:
+        embed = mostrar_ayuda_ventas(ctx, "item")
+        await ctx.send(embed=embed)
         return
     
-    # **COMANDO DIRECTO** - Venta por ID
     try:
         if mencion.id == ctx.author.id:
             await ctx.send("❌ No puedes venderte a ti mismo")
             return
         
-        user_id = str(ctx.author.id)
-        buyer_id = str(mencion.id)
-        
         # Verificar si es venta al bot
-        if mencion.id == ctx.bot.user.id:
-            # Venta directa al bot (100% valor)
-            character_to_sell = anime_gacha_system.get_character_by_id(user_id, item_id)
-            if not character_to_sell:
-                await ctx.send("❌ No tienes este personaje en tu colección")
+        if mencion.id == bot.user.id:
+            # Venta directa al bot (sin regateo)
+            user_economy_data = economy_system.get_user_data(str(ctx.author.id))
+            item_to_sell = None
+            item_index = None
+            
+            # Buscar el item
+            for i, item in enumerate(user_economy_data.get("inventario", [])):
+                if item.get("unique_id") == item_id or item.get("id") == item_id:
+                    item_to_sell = item
+                    item_index = i
+                    break
+            
+            if not item_to_sell:
+                await ctx.send("❌ No se encontró el item en tu inventario")
                 return
             
-            # Calcular precio automático para bot usando TU SISTEMA DE RAREZAS
-            rarity_multiplier = ANIME_RARITY_SYSTEM[character_to_sell["rareza"]]["coin_multiplier"]
-            base_value = 100
-            price = int(base_value * rarity_multiplier * 1.0)  # 100% valor
+            # Determinar precio
+            item_value = item_to_sell.get("valor", 100)
+            price = int(item_value * 1)  # Precio automático para bot
             
-            # Remover personaje del sistema gacha
-            async def remove_character_operation():
-                user_data = anime_gacha_system.get_user_data(user_id)
-                if not user_data:
-                    return False
-                    
-                for i, char in enumerate(user_data.get("personajes", [])):
-                    if char.get("unique_id") == item_id or char.get("id") == item_id:
-                        user_data["personajes"].pop(i)
-                        
-                        # Actualizar personajes_unicos
-                        if "personajes_unicos" in user_data:
-                            if char.get("id") in user_data["personajes_unicos"]:
-                                user_data["personajes_unicos"].remove(char.get("id"))
-                        
-                        return True
-                return False
-            
-            success = await anime_gacha_system._atomic_operation(remove_character_operation)
-            if not success:
-                await ctx.send("❌ Error al remover el personaje")
-                return
-            
-            # Agregar monedas al vendedor
-            await economy_system.add_coins(user_id, price)
+            # Realizar venta al bot
+            user_economy_data["inventario"].pop(item_index)
+            await economy_system.add_coins(str(ctx.author.id), price)
             
             embed = discord.Embed(
-                title="✅ Venta al Bot Exitosa",
-                description=f"Has vendido a **{character_to_sell['nombre']}** al bot por **{price}** monedas",
+                title="🌼 Venta Exitosa",
+                description=f"Has vendido **{item_to_sell.get('nombre', 'Item')}** a Yuki por **{price}** monedas",
                 color=0x00ff88
             )
             await ctx.send(embed=embed)
             return
         
-        # **VENTA NORMAL ENTRE JUGADORES**
-        character = anime_gacha_system.get_character_by_id(user_id, item_id)
-        if not character:
-            await ctx.send("❌ No tienes este personaje en tu colección")
+        # Obtener información del item
+        user_data = economy_system.get_user_data(str(ctx.author.id))
+        user_items = user_data.get("inventario", [])
+        
+        # Buscar el item en el inventario
+        item_found = None
+        for item in user_items:
+            if item.get('unique_id') == item_id or item.get('id') == item_id:
+                item_found = item
+                break
+        
+        if not item_found:
+            await ctx.send("❌ No se encontró el item en tu inventario")
             return
         
-        item_name = character.get('nombre', 'Personaje')
-        # Calcular valor real basado en rareza usando TU SISTEMA
-        rarity_multiplier = ANIME_RARITY_SYSTEM[character["rareza"]]["coin_multiplier"]
-        base_value = 100
-        real_value = int(base_value * rarity_multiplier)
-        current_price = real_value if price is None else price
+        item_name = item_found.get('nombre', 'Item')
+        real_value = item_found.get('valor', 100)
+        if price is None:
+            price = real_value
         
         # Verificar que el comprador tiene al menos alguna moneda
-        buyer_data = economy_system.get_user_data(buyer_id)
-        if not buyer_data or buyer_data.get("monedas", 0) <= 0:
+        buyer_data = economy_system.get_user_data(str(mencion.id))
+        if buyer_data["monedas"] <= 0:
             await ctx.send(f"❌ {mencion.mention} no tiene monedas para realizar compras")
             return
         
@@ -3504,84 +3494,45 @@ async def handle_vender_command(ctx, mencion: discord.Member = None, item_id: st
         offer_data = {
             'offer_id': offer_id,
             'seller_id': ctx.author.id,
-            'seller': ctx.author,
             'buyer_id': mencion.id,
+            'seller': ctx.author,
             'buyer': mencion,
             'item_id': item_id,
             'item_name': item_name,
             'real_value': real_value,
-            'current_price': current_price,
-            'initial_price': current_price,
+            'current_price': price,
+            'initial_price': price,
             'buyer_offer': None,
             'has_pending_offer': False,
-            'type': 'character',
+            'type': 'item',
             'guild': ctx.guild,
             'expired': False,
-            'last_offer_by': ctx.author.id,
-            'serie': character.get('serie', 'Desconocida'),
-            'rarity': character.get('rareza', 'comun'),
-            'image_url': character.get('image_url'),
-            'descripcion': character.get('descripcion', '')
+            'last_offer_by': ctx.author.id
         }
         
-        # Crear embed ESPECIAL para personajes
+        # Crear embed inicial
         embed = discord.Embed(
-            title=f"🌟 Venta de Personaje: {item_name}",
-            color=ANIME_RARITY_SYSTEM[character["rareza"]]["color"],
+            title="💰 Oferta de Venta de Item",
+            color=0xf39c12,
             timestamp=discord.utils.utcnow()
         )
         
-        percentage = (current_price / real_value) * 100 if real_value > 0 else 0
-        
-        # Imagen del personaje si está disponible
-        if character.get('image_url'):
-            embed.set_thumbnail(url=character['image_url'])
+        percentage = (price / real_value) * 100 if real_value > 0 else 0
         
         embed.add_field(name="👤 Vendedor", value=ctx.author.mention, inline=True)
         embed.add_field(name="👥 Comprador", value=mencion.mention, inline=True)
-        embed.add_field(name="📺 Serie", value=character.get('serie', 'Desconocida'), inline=True)
-        
-        embed.add_field(
-            name="✨ Rareza", 
-            value=f"{ANIME_RARITY_SYSTEM[character['rareza']]['emoji']} {character['rareza'].title()}", 
-            inline=True
-        )
-        embed.add_field(
-            name="💰 Precio Inicial", 
-            value=f"**{current_price}🪙**", 
-            inline=True
-        )
-        embed.add_field(
-            name="💎 Valor Real", 
-            value=f"{real_value}🪙", 
-            inline=True
-        )
-        
-        embed.add_field(
-            name="📊 Porcentaje", 
-            value=f"{percentage:.1f}%", 
-            inline=True
-        )
+        embed.add_field(name="🎁 Item", value=item_name, inline=True)
+        embed.add_field(name="💰 Precio Inicial", value=f"**{price}🪙**", inline=True)
+        embed.add_field(name="💎 Valor Real", value=f"{real_value}🪙", inline=True)
+        embed.add_field(name="📊 Porcentaje", value=f"{percentage:.1f}%", inline=True)
         embed.add_field(
             name="👛 Monedas del Comprador", 
-            value=f"{buyer_data.get('monedas', 0)}🪙", 
+            value=f"{buyer_data['monedas']}🪙", 
             inline=True
         )
-        embed.add_field(
-            name="🏷️ ID", 
-            value=f"`{item_id}`", 
-            inline=True
-        )
+        embed.add_field(name="🏷️ ID", value=f"`{item_id}`", inline=True)
         
-        # Descripción si está disponible
-        if character.get('descripcion'):
-            embed.add_field(
-                name="📖 Descripción",
-                value=character['descripcion'][:100] + "..." if len(character['descripcion']) > 100 else character['descripcion'],
-                inline=False
-            )
-        
-        embed.set_footer(text=f"⏰ Oferta válida por {OFFER_TIME//60} minutos • Sistema de regateo activo")
+        embed.set_footer(text=f"⏰ Oferta válida por {OFFER_TIME} segundos • Ambos pueden hacer ofertas")
         
         # Crear vista
         view = TradeView(offer_data)
@@ -3594,81 +3545,8 @@ async def handle_vender_command(ctx, mencion: discord.Member = None, item_id: st
         active_offers[offer_id] = offer_data
 
     except Exception as e:
-        print(f"Error en comando vender directo: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"Error en comando vender: {e}")
         await ctx.send("❌ Error al iniciar la venta")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-@bot.command(name='vender')
-async def vender(ctx, mencion: discord.Member = None, item_id: str = None, price: int = None):
-    """Sistema unificado de ventas - Menú interactivo y venta directa"""
-    
-    # Si no hay parámetros, usar el sistema de menús
-    if mencion is None and item_id is None:
-        user_id = str(ctx.author.id)
-        
-        # USAR TU SISTEMA ANIME GACHA PARA PERSONAJES
-        user_data = anime_gacha_system.get_user_data(user_id)
-        if not user_data:
-            await ctx.send('No tienes datos en el sistema.')
-            return
-            
-        personajes = user_data.get('personajes', [])
-        
-        if not personajes:
-            await ctx.send('No tienes personajes para vender.')
-            return
-        
-        # Mostrar ayuda y menú
-        embed = mostrar_ayuda_ventas(ctx, "personaje")
-        await ctx.send(embed=embed)
-        
-        # Crear vista de selección de personajes
-        view = PersonajeSelectView(personajes)
-        await ctx.send('**🎮 MODO MENÚ:** Selecciona el personaje que deseas vender:', view=view)
-        return
-    
-    # Si hay parámetros pero no son suficientes, mostrar ayuda
-    if mencion is None or item_id is None:
-        embed = mostrar_ayuda_ventas(ctx, "item")
-        await ctx.send(embed=embed)
-        return
-    
-    # **COMANDO DIRECTO** - Usar la función unificada
-    await handle_vender_command(ctx, mencion, item_id, price)
-
-@bot.command(name='vp')
-async def vender_personaje(ctx, mencion: discord.Member = None, character_id: str = None, price: int = None):
-    """Comando directo para venta de personajes por ID"""
-    
-    # Mostrar ayuda si no se proporcionan parámetros
-    if mencion is None or character_id is None:
-        embed = mostrar_ayuda_ventas(ctx, "personaje")
-        await ctx.send(embed=embed)
-        return
-    
-    # Reutilizar la lógica del comando directo
-    await handle_vender_command(ctx, mencion, character_id, price)
-#workspace
-
 
 @bot.command(name='vp')
 async def vender_personaje(ctx, mencion: discord.Member = None, character_id: str = None, price: int = None):
