@@ -85,7 +85,7 @@ async def on_member_join(member):
 	if channel:
 		mensajes = [
 			f"¡Hola {member.mention}! 🌸 Bienvenido/a a **{member.guild.name}** 💖",
-			f"¡Bienvenid@ {member.mention}! 🎮 Espero que disfrutes en **{member.guild.name}**",
+			f"¡Bienvenid@ {member.mention}! 🎮 Espero que pases buenos momentos en **{member.guild.name}**",
 			f"¡Hey {member.mention}! 🌟 Te damos la bienvenida a **{member.guild.name}**"
 		]
 		
@@ -118,8 +118,7 @@ async def on_message(message):
 async def ayuda(ctx):
 	respuestas = [
 		"Q te pasa we?",
-		"¿Necesitas ayuda? ¡Usa `!comandos`!",
-		"No sé we, ¿por qué me preguntas a mí?"
+		"¿Necesitas ayuda? ¡Usa `!comandos`!"
 	]
 	await ctx.send(random.choice(respuestas))
 
